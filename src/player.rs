@@ -80,11 +80,9 @@ impl Player {
         if self.is_under_the_surface(&map) {
             self.y -= self.speed_y;
             self.y = self.y.ceil() - 0.01;
-            log!("y {}", self.y);
             self.speed_y = 0.0;
         } else if !self.is_touching_the_surface(&map) {
             self.speed_y += 0.03;
-            log!("falling");
         }
     }
 }
