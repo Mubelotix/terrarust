@@ -1,7 +1,7 @@
 use crate::{coords::map_to_screen, player::Player, textures::Textures};
 use wasm_game_lib::graphics::canvas::Canvas;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Block {
     Grass,
     Air,
@@ -42,7 +42,7 @@ impl<'a> Map<'a> {
                 match self[(x, y)] {
                     Block::Air => (),
                     Block::Grass => canvas
-                        .draw_image((xisize as f64, yisize as f64), &self.textures.grass[x % 4]),
+                        .draw_image((xisize as f64, yisize as f64), &self.textures.grass[x as usize % 4]),
                     Block::Dirt => {
                         canvas.draw_image((xisize as f64, yisize as f64), &self.textures.dirt)
                     }
@@ -52,12 +52,27 @@ impl<'a> Map<'a> {
     }
 }
 
-impl<'a> std::ops::Index<(usize, usize)> for Map<'a> {
+impl<'a> std::ops::Index<(isize, isize)> for Map<'a> {
     type Output = Block;
 
     #[allow(clippy::comparison_chain)]
-    fn index(&self, (x, y): (usize, usize)) -> &<Self as std::ops::Index<(usize, usize)>>::Output {
-        if x == 10 {
+    fn index(&self, (x, y): (isize, isize)) -> &Self::Output {
+        if x == 25 || x == 0 {
+            return &Block::Dirt;
+        }
+        if x == 24 && y >= 2 {
+            return &Block::Dirt;
+        }
+        if x == 23 && y >= 4 {
+            return &Block::Dirt;
+        }
+        if x == 22 && y >= 6 {
+            return &Block::Dirt;
+        }
+        if x > 0 && x < 4 && y == 0 {
+            return &Block::Dirt;
+        }
+        if x > 6 && x < 9 && y == 0 {
             return &Block::Dirt;
         }
         if y == 8 {
