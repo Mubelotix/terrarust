@@ -1,11 +1,9 @@
 use wasm_bindgen::prelude::*;
-use wasm_game_lib::{graphics::{image::Image, sprite::Sprite, window::Window, color::Color}, inputs::{mouse::start_recording_mouse_events, keyboard::{KeyboardEvent, Key}, event::Event}};
+use wasm_game_lib::{graphics::{sprite::Sprite, window::Window, color::Color}, inputs::{mouse::start_recording_mouse_events, keyboard::{KeyboardEvent, Key}, event::Event}};
 use wasm_game_lib::inputs::event::types::*;
 use wasm_game_lib::system::sleep;
 use std::time::Duration;
 use console_error_panic_hook::set_once;
-use lazy_static::lazy_static;
-use std::sync::Mutex;
 
 macro_rules! log {
     ( $( $t:tt )* ) => {
@@ -16,7 +14,6 @@ macro_rules! log {
 mod loader;
 mod progress_bar;
 mod textures;
-use loader::load_images;
 mod map;
 mod coords;
 mod player;

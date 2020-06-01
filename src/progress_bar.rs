@@ -1,10 +1,7 @@
-use std::time::Duration;
 use wasm_bindgen::JsValue;
 use wasm_game_lib::graphics::canvas::{Canvas, LineStyle};
 use wasm_game_lib::graphics::color::Color;
 use wasm_game_lib::graphics::drawable::Drawable;
-use wasm_game_lib::system::*;
-use web_sys::CanvasGradient;
 
 pub struct ProgressBar {
     pub coords: (f64, f64),

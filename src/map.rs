@@ -45,7 +45,8 @@ impl<'a> Map<'a> {
 impl<'a> std::ops::Index<(usize, usize)> for Map<'a> {
     type Output = Block;
     
-    fn index(&self, (x, y): (usize, usize)) -> &<Self as std::ops::Index<(usize, usize)>>::Output {
+    #[allow(clippy::comparison_chain)]
+    fn index(&self, (_x, y): (usize, usize)) -> &<Self as std::ops::Index<(usize, usize)>>::Output {
         if y == 10 {
             &Block::Grass
         } else if y > 10 {
