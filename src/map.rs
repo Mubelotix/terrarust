@@ -56,25 +56,7 @@ impl<'a> std::ops::Index<(isize, isize)> for Map<'a> {
     type Output = Block;
 
     #[allow(clippy::comparison_chain)]
-    fn index(&self, (x, y): (isize, isize)) -> &Self::Output {
-        if x == 25 || x == 0 {
-            return &Block::Dirt;
-        }
-        if x == 24 && y >= 2 {
-            return &Block::Dirt;
-        }
-        if x == 23 && y >= 4 {
-            return &Block::Dirt;
-        }
-        if x == 22 && y >= 6 {
-            return &Block::Dirt;
-        }
-        if x > 0 && x < 4 && y == 0 {
-            return &Block::Dirt;
-        }
-        if x > 6 && x < 9 && y == 0 {
-            return &Block::Dirt;
-        }
+    fn index(&self, (_x, y): (isize, isize)) -> &Self::Output {
         if y == 8 {
             &Block::Grass
         } else if y > 8 {
