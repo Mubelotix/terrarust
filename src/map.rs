@@ -1,4 +1,4 @@
-use crate::{player::Player, textures::Textures};
+use crate::{coords::map_to_screen, player::Player, textures::Textures};
 use wasm_game_lib::graphics::canvas::Canvas;
 
 #[derive(Debug, Clone, Copy)]
@@ -29,19 +29,23 @@ impl<'a> Map<'a> {
 }
 
 impl<'a> Map<'a> {
-    pub fn draw_on_canvas(&self, canvas: &mut Canvas, player: &Player) {
+    pub fn draw_on_canvas(
+        &self,
+        canvas: &mut Canvas,
+        player: &Player,
+        screen_center: (isize, isize),
+    ) {
         for x in 0..30 {
             for y in 0..20 {
+                let (xisize, yisize) =
+                    map_to_screen(x as isize, y as isize, &player, screen_center);
                 match self[(x, y)] {
                     Block::Air => (),
-                    Block::Grass => canvas.draw_image(
-                        ((x * 16 - player.x) as f64, y as f64 * 16.0),
-                        &self.textures.grass[x % 4],
-                    ),
-                    Block::Dirt => canvas.draw_image(
-                        ((x * 16 - player.x) as f64, y as f64 * 16.0),
-                        &self.textures.dirt,
-                    ),
+                    Block::Grass => canvas
+                        .draw_image((xisize as f64, yisize as f64), &self.textures.grass[x % 4]),
+                    Block::Dirt => {
+                        canvas.draw_image((xisize as f64, yisize as f64), &self.textures.dirt)
+                    }
                 }
             }
         }
@@ -52,10 +56,13 @@ impl<'a> std::ops::Index<(usize, usize)> for Map<'a> {
     type Output = Block;
 
     #[allow(clippy::comparison_chain)]
-    fn index(&self, (_x, y): (usize, usize)) -> &<Self as std::ops::Index<(usize, usize)>>::Output {
-        if y == 10 {
+    fn index(&self, (x, y): (usize, usize)) -> &<Self as std::ops::Index<(usize, usize)>>::Output {
+        if x == 10 {
+            return &Block::Dirt;
+        }
+        if y == 8 {
             &Block::Grass
-        } else if y > 10 {
+        } else if y > 8 {
             &Block::Dirt
         } else {
             &Block::Air

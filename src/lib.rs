@@ -36,11 +36,16 @@ pub async fn start() -> Result<(), JsValue> {
     let (mut window, mut canvas) =
         Window::init_with_events(KEYBOARD_EVENT + RESIZE_EVENT + MOUSE_EVENT);
 
+    let screen_center = (
+        canvas.get_width() as isize / 2,
+        canvas.get_height() as isize / 2,
+    );
+
     let textures = Textures::load(&mut canvas).await;
 
     let map = Map::new(&textures);
     let mut player = Player::new();
-    let chara = Sprite::new((264.0, 0.0), &textures.character, (0.0, 0.0));
+    let chara = Sprite::new((screen_center.0 as f64, screen_center.1 as f64), &textures.character, (0.0, 0.0));
 
     let mut direction_keys = (false, false, false, false);
 
@@ -72,7 +77,7 @@ pub async fn start() -> Result<(), JsValue> {
         player.handle_events(direction_keys);
 
         canvas.clear_with_color(Color::cyan());
-        map.draw_on_canvas(&mut canvas, &player);
+        map.draw_on_canvas(&mut canvas, &player, screen_center);
         canvas.draw(&chara);
         //scanvas.draw(&units);
 
