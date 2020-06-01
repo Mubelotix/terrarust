@@ -5,6 +5,7 @@ pub struct Textures {
     pub character: Image,
     pub grass: ([Image; 4], Image, Image),
     pub dirt: Image,
+    pub tree: Image,
 }
 
 impl Textures {
@@ -19,6 +20,7 @@ impl Textures {
                 "ressources/blocks/grass/corner1.png",
                 "ressources/blocks/grass/corner2.png",
                 "ressources/blocks/dirt.png",
+                "ressources/tree.png",
             ],
             &mut canvas,
         )
@@ -28,6 +30,7 @@ impl Textures {
             character: t.remove(0),
             grass: ([t.remove(0), t.remove(0), t.remove(0), t.remove(0)], t.remove(0), t.remove(0)),
             dirt: t.remove(0),
+            tree: t.remove(0),
         }
     }
 }
