@@ -35,16 +35,16 @@ impl<'a> Map<'a> {
         player: &Player,
         screen_center: (isize, isize),
     ) {
-        for x in 0..30 {
-            for y in 0..20 {
+        for x in -50..50 {
+            for y in 0..50 {
                 let (xisize, yisize) =
                     map_to_screen(x as isize, y as isize, &player, screen_center);
                 match self[(x, y)] {
                     Block::Air => (),
                     Block::Grass => canvas
-                        .draw_image((xisize as f64, yisize as f64), &self.textures.grass[x as usize % 4]),
+                        .draw_image((xisize, yisize), &self.textures.grass[x as usize % 4]),
                     Block::Dirt => {
-                        canvas.draw_image((xisize as f64, yisize as f64), &self.textures.dirt)
+                        canvas.draw_image((xisize, yisize), &self.textures.dirt)
                     }
                 }
             }
