@@ -26,23 +26,23 @@ impl Player {
     }
 
     pub fn can_move_right(&self, map: &Map) -> bool {
-        map[((self.x + 0.2).ceil() as isize, self.y.floor() as isize)] == Block::Air
-            && map[((self.x + 0.2).ceil() as isize, self.y.floor() as isize - 1)] == Block::Air
-            && map[((self.x + 0.2).ceil() as isize, self.y.floor() as isize - 2)] == Block::Air
-            && map[((self.x + 0.2).ceil() as isize, self.y.floor() as isize - 3)] == Block::Air
-            && map[((self.x + 0.2).ceil() as isize, self.y.floor() as isize - 4)] == Block::Air
-            && map[((self.x + 0.2).ceil() as isize, self.y.floor() as isize - 5)] == Block::Air
-            && map[((self.x + 0.2).ceil() as isize, self.y.floor() as isize - 6)] == Block::Air
+        map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize)] == Block::Air
+            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 1)] == Block::Air
+            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 2)] == Block::Air
+            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 3)] == Block::Air
+            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 4)] == Block::Air
+            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 5)] == Block::Air
+            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 6)] == Block::Air
     }
 
     pub fn can_move_left(&self, map: &Map) -> bool {
-        map[((self.x - 0.2).floor() as isize, self.y.floor() as isize)] == Block::Air
-            && map[((self.x - 0.2).floor() as isize, self.y.floor() as isize - 1)] == Block::Air
-            && map[((self.x - 0.2).floor() as isize, self.y.floor() as isize - 2)] == Block::Air
-            && map[((self.x - 0.2).floor() as isize, self.y.floor() as isize - 3)] == Block::Air
-            && map[((self.x - 0.2).floor() as isize, self.y.floor() as isize - 4)] == Block::Air
-            && map[((self.x - 0.2).floor() as isize, self.y.floor() as isize - 5)] == Block::Air
-            && map[((self.x - 0.2).floor() as isize, self.y.floor() as isize - 6)] == Block::Air
+        map[((self.x - 0.3).floor() as isize, self.y.floor() as isize)] == Block::Air
+            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 1)] == Block::Air
+            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 2)] == Block::Air
+            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 3)] == Block::Air
+            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 4)] == Block::Air
+            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 5)] == Block::Air
+            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 6)] == Block::Air
     }
 
     pub fn can_move_up_by(&self, distance: f64, map: &Map) -> bool {
@@ -58,13 +58,13 @@ impl Player {
 
     pub fn handle_events(&mut self, keys: (bool, bool, bool, bool), map: &Map) {
         if keys.1 && self.can_move_right(&map) {
-            self.x += 0.2;
+            self.x += 0.3;
         }
         if keys.0 && self.is_touching_the_surface(&map) {
             self.speed_y = -0.40;
         }
         if keys.3 && self.can_move_left(&map) {
-            self.x -= 0.2;
+            self.x -= 0.3;
         }
 
         if self.speed_y < 0.0 {
