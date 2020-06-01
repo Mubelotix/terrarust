@@ -25,6 +25,7 @@ mod player;
 mod progress_bar;
 mod textures;
 use map::Map;
+mod random;
 use player::Player;
 use textures::Textures;
 

@@ -1,4 +1,4 @@
-use crate::{coords::map_to_screen, player::Player, textures::Textures};
+use crate::{coords::map_to_screen, player::Player, textures::Textures, random::get_random_u32};
 use wasm_game_lib::graphics::canvas::Canvas;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -9,20 +9,35 @@ pub enum Block {
 }
 
 pub struct Map<'a> {
-    blocks: [[Block; 8]; 8],
+    dirt_height: [isize; 200],
     textures: &'a Textures,
 }
 
 impl<'a> Map<'a> {
     pub fn new(textures: &Textures) -> Map {
         let mut map = Map {
-            blocks: [[Block::Air; 8]; 8],
+            dirt_height: [20; 200],
             textures,
         };
-        for x in 0..8 {
-            for y in 7..8 {
-                map.blocks[x][y] = Block::Grass;
+        let mut height: f64 = 20.0;
+        let mut slope: f64 = 0.2;
+        for x in 0..200 {
+            let mut random: f64 = get_random_u32() as f64 - 2_147_483_647.0;
+            random /= 2_147_483_647.0;
+            slope += random / 5.0;
+            if slope > 1.5 {
+                slope = 1.5;
             }
+            if height > 40.0 && slope > -0.4 {
+                log!("redressing!");
+                slope -= 0.08;
+            }
+            if height < 10.0 && slope < 0.4 {
+                log!("slowing down!");
+                slope += 0.08;
+            }
+            height += slope;
+            map.dirt_height[x] = height.floor() as isize;
         }
         map
     }
@@ -35,7 +50,7 @@ impl<'a> Map<'a> {
         player: &Player,
         screen_center: (isize, isize),
     ) {
-        for x in -50..50 {
+        for x in 0..200 {
             for y in 0..50 {
                 let (xisize, yisize) =
                     map_to_screen(x as isize, y as isize, &player, screen_center);
@@ -55,19 +70,17 @@ impl<'a> std::ops::Index<(isize, isize)> for Map<'a> {
     type Output = Block;
 
     #[allow(clippy::comparison_chain)]
-    fn index(&self, (_x, y): (isize, isize)) -> &Self::Output {
-        if y == 8 {
-            &Block::Grass
-        } else if y > 8 {
-            &Block::Dirt
-        } else {
-            &Block::Air
-        }
-        /*if let Some(column) = self.blocks.get(x) {
-            if let Some(block) = column.get(y) {
-                return &block;
+    fn index(&self, (x, y): (isize, isize)) -> &Self::Output {
+        if x > 0 {
+            if let Some(height) = self.dirt_height.get(x as usize) {
+                return match height {
+                    height if height == &y => &Block::Grass,
+                    height if height > &y => &Block::Air,
+                    height if height < &y => &Block::Dirt,
+                    _ => &Block::Air,
+                };
             }
         }
-        &Block::Air*/
+        &Block::Air
     }
 }
