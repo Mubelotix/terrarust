@@ -5,10 +5,7 @@ pub struct Player {
 
 impl Player {
     pub fn new() -> Player {
-        Player {
-            x: 20,
-            y: 20,
-        }
+        Player { x: 20, y: 20 }
     }
 
     pub fn handle_events(&mut self, keys: (bool, bool, bool, bool)) {

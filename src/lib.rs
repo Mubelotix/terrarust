@@ -1,9 +1,16 @@
+use console_error_panic_hook::set_once;
+use std::time::Duration;
 use wasm_bindgen::prelude::*;
-use wasm_game_lib::{graphics::{sprite::Sprite, window::Window, color::Color}, inputs::{mouse::start_recording_mouse_events, keyboard::{KeyboardEvent, Key}, event::Event}};
 use wasm_game_lib::inputs::event::types::*;
 use wasm_game_lib::system::sleep;
-use std::time::Duration;
-use console_error_panic_hook::set_once;
+use wasm_game_lib::{
+    graphics::{color::Color, sprite::Sprite, window::Window},
+    inputs::{
+        event::Event,
+        keyboard::{Key, KeyboardEvent},
+        mouse::start_recording_mouse_events,
+    },
+};
 
 macro_rules! log {
     ( $( $t:tt )* ) => {
@@ -11,14 +18,14 @@ macro_rules! log {
     }
 }
 
+mod coords;
 mod loader;
+mod map;
+mod player;
 mod progress_bar;
 mod textures;
-mod map;
-mod coords;
-mod player;
-use player::Player;
 use map::Map;
+use player::Player;
 use textures::Textures;
 
 #[wasm_bindgen(start)]
@@ -33,12 +40,11 @@ pub async fn start() -> Result<(), JsValue> {
 
     let map = Map::new(&textures);
     let mut player = Player::new();
-    let chara = Sprite::new((264.0, 0.0), &textures.character, (0.0,0.0));
+    let chara = Sprite::new((264.0, 0.0), &textures.character, (0.0, 0.0));
 
     let mut direction_keys = (false, false, false, false);
 
     loop {
-        
         for event in window.poll_events() {
             #[allow(clippy::single_match)]
             match event {
@@ -56,8 +62,8 @@ pub async fn start() -> Result<(), JsValue> {
                         Key::DownArrow => direction_keys.2 = false,
                         Key::LeftArrow => direction_keys.3 = false,
                         _ => (),
-                    }
-                }
+                    },
+                },
                 _ => (),
             }
             //log!("{:?}", event);

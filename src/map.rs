@@ -1,5 +1,5 @@
-use wasm_game_lib::{graphics::{canvas::Canvas}};
-use crate::{textures::Textures, player::Player};
+use crate::{player::Player, textures::Textures};
+use wasm_game_lib::graphics::canvas::Canvas;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Block {
@@ -17,7 +17,7 @@ impl<'a> Map<'a> {
     pub fn new(textures: &Textures) -> Map {
         let mut map = Map {
             blocks: [[Block::Air; 8]; 8],
-            textures
+            textures,
         };
         for x in 0..8 {
             for y in 7..8 {
@@ -34,8 +34,14 @@ impl<'a> Map<'a> {
             for y in 0..20 {
                 match self[(x, y)] {
                     Block::Air => (),
-                    Block::Grass => canvas.draw_image(((x * 16 - player.x) as f64, y as f64 * 16.0), &self.textures.grass[x % 4]),
-                    Block::Dirt => canvas.draw_image(((x * 16 - player.x) as f64, y as f64 * 16.0), &self.textures.dirt),
+                    Block::Grass => canvas.draw_image(
+                        ((x * 16 - player.x) as f64, y as f64 * 16.0),
+                        &self.textures.grass[x % 4],
+                    ),
+                    Block::Dirt => canvas.draw_image(
+                        ((x * 16 - player.x) as f64, y as f64 * 16.0),
+                        &self.textures.dirt,
+                    ),
                 }
             }
         }
@@ -44,7 +50,7 @@ impl<'a> Map<'a> {
 
 impl<'a> std::ops::Index<(usize, usize)> for Map<'a> {
     type Output = Block;
-    
+
     #[allow(clippy::comparison_chain)]
     fn index(&self, (_x, y): (usize, usize)) -> &<Self as std::ops::Index<(usize, usize)>>::Output {
         if y == 10 {

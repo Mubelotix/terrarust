@@ -1,5 +1,5 @@
-use wasm_game_lib::{graphics::{image::Image, canvas::Canvas}};
 use crate::loader::load_images;
+use wasm_game_lib::graphics::{canvas::Canvas, image::Image};
 
 pub struct Textures {
     pub character: Image,
