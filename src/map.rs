@@ -21,7 +21,7 @@ impl<'a> Map<'a> {
         };
         let mut height: f64 = 20.0;
         let mut slope: f64 = 0.2;
-        for x in 0..200 {
+        for x in 20..200 {
             let mut random: f64 = get_random_u32() as f64 - 2_147_483_647.0;
             random /= 2_147_483_647.0;
             slope += random / 5.0;
@@ -50,14 +50,18 @@ impl<'a> Map<'a> {
         player: &Player,
         screen_center: (isize, isize),
     ) {
-        for x in 0..200 {
-            for y in 0..50 {
+        for x in player.x.floor() as isize - 60..player.x.floor() as isize + 60 {
+            for y in player.y.floor() as isize - 35..player.y.floor() as isize + 35 {
                 let (xisize, yisize) =
                     map_to_screen(x as isize, y as isize, &player, screen_center);
                 match self[(x, y)] {
                     Block::Air => (),
                     Block::Grass => {
-                        canvas.draw_image((xisize, yisize), &self.textures.grass[x as usize % 4])
+                        canvas.draw_image((xisize, yisize), match (self[(x-1, y)] != Block::Air, self[(x+1, y)] != Block::Air) {
+                            (true, false) => &self.textures.grass.2,
+                            (false, true) => &self.textures.grass.1,
+                            _ => &self.textures.grass.0[x as usize % 4],
+                        });
                     }
                     Block::Dirt => canvas.draw_image((xisize, yisize), &self.textures.dirt),
                 }

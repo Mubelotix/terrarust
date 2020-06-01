@@ -3,7 +3,7 @@ use wasm_game_lib::graphics::{canvas::Canvas, image::Image};
 
 pub struct Textures {
     pub character: Image,
-    pub grass: [Image; 4],
+    pub grass: ([Image; 4], Image, Image),
     pub dirt: Image,
 }
 
@@ -16,6 +16,8 @@ impl Textures {
                 "ressources/blocks/grass/2.png",
                 "ressources/blocks/grass/3.png",
                 "ressources/blocks/grass/4.png",
+                "ressources/blocks/grass/corner1.png",
+                "ressources/blocks/grass/corner2.png",
                 "ressources/blocks/dirt.png",
             ],
             &mut canvas,
@@ -24,7 +26,7 @@ impl Textures {
 
         Textures {
             character: t.remove(0),
-            grass: [t.remove(0), t.remove(0), t.remove(0), t.remove(0)],
+            grass: ([t.remove(0), t.remove(0), t.remove(0), t.remove(0)], t.remove(0), t.remove(0)),
             dirt: t.remove(0),
         }
     }
