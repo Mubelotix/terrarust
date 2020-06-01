@@ -1,5 +1,5 @@
-use wasm_game_lib::{graphics::{drawable::Drawable, canvas::Canvas}};
-use crate::textures::Textures;
+use wasm_game_lib::{graphics::{canvas::Canvas}};
+use crate::{textures::Textures, player::Player};
 
 #[derive(Debug, Clone, Copy)]
 pub enum Block {
@@ -28,14 +28,14 @@ impl<'a> Map<'a> {
     }
 }
 
-impl<'a> Drawable for Map<'a> {
-    fn draw_on_canvas(&self, canvas: &mut Canvas) {
+impl<'a> Map<'a> {
+    pub fn draw_on_canvas(&self, canvas: &mut Canvas, player: &Player) {
         for x in 0..30 {
             for y in 0..20 {
                 match self[(x, y)] {
                     Block::Air => (),
-                    Block::Grass => canvas.draw_image((x as f64 * 16.0, y as f64 * 16.0), &self.textures.grass[x % 4]),
-                    Block::Dirt => canvas.draw_image((x as f64 * 16.0, y as f64 * 16.0), &self.textures.dirt),
+                    Block::Grass => canvas.draw_image(((x * 16 - player.x) as f64, y as f64 * 16.0), &self.textures.grass[x % 4]),
+                    Block::Dirt => canvas.draw_image(((x * 16 - player.x) as f64, y as f64 * 16.0), &self.textures.dirt),
                 }
             }
         }
