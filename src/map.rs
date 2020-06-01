@@ -41,11 +41,10 @@ impl<'a> Map<'a> {
                     map_to_screen(x as isize, y as isize, &player, screen_center);
                 match self[(x, y)] {
                     Block::Air => (),
-                    Block::Grass => canvas
-                        .draw_image((xisize, yisize), &self.textures.grass[x as usize % 4]),
-                    Block::Dirt => {
-                        canvas.draw_image((xisize, yisize), &self.textures.dirt)
+                    Block::Grass => {
+                        canvas.draw_image((xisize, yisize), &self.textures.grass[x as usize % 4])
                     }
+                    Block::Dirt => canvas.draw_image((xisize, yisize), &self.textures.dirt),
                 }
             }
         }

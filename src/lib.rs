@@ -45,7 +45,11 @@ pub async fn start() -> Result<(), JsValue> {
 
     let map = Map::new(&textures);
     let mut player = Player::new();
-    let chara = Sprite::new((screen_center.0 as f64, screen_center.1 as f64), &textures.character, (25.0, 128.0));
+    let chara = Sprite::new(
+        (screen_center.0 as f64, screen_center.1 as f64),
+        &textures.character,
+        (25.0, 128.0),
+    );
 
     let mut direction_keys = (false, false, false, false);
 

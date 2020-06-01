@@ -13,5 +13,8 @@ pub fn map_to_screen(
     let diff_x = player.x - x as f64;
     let diff_y = player.y - y as f64;
 
-    (screen_center.0 as f64 - diff_x * 16.0, screen_center.1 as f64 - diff_y * 16.0)
+    (
+        screen_center.0 as f64 - diff_x * 16.0,
+        screen_center.1 as f64 - diff_y * 16.0,
+    )
 }
