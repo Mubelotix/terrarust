@@ -16,6 +16,7 @@ pub struct Chunk {
 }
 
 impl Chunk {
+    #[allow(clippy::cognitive_complexity)]
     pub fn generate(height: &mut f64, slope: &mut f64) -> Chunk {
         let mut x = 0;
         let blocks = arr!({
@@ -65,7 +66,7 @@ impl<'a> Map<'a> {
         };
         let mut height: f64 = 20.0;
         let mut slope: f64 = 0.2;
-        for i in 0..10 {
+        for _i in 0..10 {
             map.chunks.push(Chunk::generate(&mut height, &mut slope))
         }
         
