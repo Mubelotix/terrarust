@@ -1,6 +1,7 @@
-use crate::{coords::map_to_screen, player::Player, textures::Textures, random::get_random_u32};
+use crate::{coords::{map_to_screen, x_to_chunk, x_to_chunk_and_column, x_to_biome}, player::Player, textures::Textures, random::get_random_u32};
 use wasm_game_lib::graphics::canvas::Canvas;
 use std::hash::Hasher;
+use twox_hash::XxHash32;
 use arr_macro::arr;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -11,6 +12,35 @@ pub enum Block {
     Tree,
 }
 
+#[derive(Debug)]
+pub enum Biome {
+    Hills,
+    Grassland,
+}
+
+impl Biome {
+    fn get_frequency(&self) -> f64 {
+        match self {
+            Biome::Hills => 0.2,
+            Biome::Grassland => 0.07,
+        }
+    }
+
+    fn get_max_slope(&self) -> f64 {
+        match self {
+            Biome::Hills => 1.5,
+            Biome::Grassland => 0.5,
+        }
+    }
+
+    fn get_height(&self) -> std::ops::Range<f64> {
+        match self {
+            Biome::Hills => (20.0..60.0),
+            Biome::Grassland => (20.0..60.0),
+        }
+    }
+}
+
 pub struct Chunk {
     blocks: [[Block; 2048]; 32],
     pub left_config: (f64, f64),  // (height, slope)
@@ -19,29 +49,35 @@ pub struct Chunk {
 
 impl Chunk {
     #[allow(clippy::cognitive_complexity)]
-    pub fn generate(height: &mut f64, slope: &mut f64, left_to_right: bool) -> Chunk {
+    pub fn generate(height: &mut f64, slope: &mut f64, left_to_right: bool, x: isize) -> Chunk {
         let begin_config: (f64, f64) = (*height, *slope);
+        let biome = x_to_biome(x);
+        log!("generating {:?}", biome);
 
-        let mut x: isize = 0;
         let mut blocks = arr!({
             let mut random: f64 = get_random_u32() as f64 - 2_147_483_647.0;
             random /= 2_147_483_647.0;
-            *slope += random / 5.0;
-            if *slope > 1.5 {
-                *slope = 1.5;
+            *slope += random * biome.get_frequency();
+
+            if *slope > biome.get_max_slope() {
+                *slope = biome.get_max_slope();
+            } else if *slope < -biome.get_max_slope() {
+                *slope = -biome.get_max_slope();
             }
-            if *height > 40.0 && *slope > -0.4 {
-                *slope -= 0.08;
+
+            if (*height < biome.get_height().start - 10.0 && *slope < -0.4) || *height < biome.get_height().start {
+                *slope += biome.get_frequency() / 3.0;
             }
-            if *height < 10.0 && *slope < 0.4 {
-                *slope += 0.08;
+            if (*height > biome.get_height().end + 10.0 && *slope > 0.4) || *height > biome.get_height().end {
+                *slope -= biome.get_frequency() / 3.0;
             }
+
             *height += *slope;
             
             if left_to_right {
-                x += 1;
+                //x += 1;
             } else {
-                x -= 1;
+                //x -= 1;
             }
             
             let mut column = [Block::Dirt; 2048];
@@ -79,24 +115,23 @@ impl<'a> Map<'a> {
         };
         let mut height: f64 = 20.0;
         let mut slope: f64 = 0.2;
-        for _i in -5..5 {
-            map.chunks.push(Chunk::generate(&mut height, &mut slope, true))
+        for i in -5..5 {
+            map.chunks.push(Chunk::generate(&mut height, &mut slope, true, i*32))
         }
         
         map
     }
 
     pub fn update_chunks(&mut self, player: &Player) {
-        let mut chunk_number = (player.x - player.x % 32.0) as isize;
-        chunk_number /= 32;
+        let mut chunk_number = x_to_chunk(player.x.floor() as isize);
 
         let mut diff = self.first_chunk_number - chunk_number;
         while diff > -4 {
             log!("move left");
             self.chunks.remove(self.chunks.len() - 1);
             let mut config = self.chunks[0].left_config;
-            self.chunks.insert(0, Chunk::generate(&mut config.0, &mut config.1, false));
             self.first_chunk_number -= 1;
+            self.chunks.insert(0, Chunk::generate(&mut config.0, &mut config.1, false, self.first_chunk_number * 32));
 
             diff = self.first_chunk_number - chunk_number;
         }
@@ -104,8 +139,8 @@ impl<'a> Map<'a> {
             log!("move right");
             self.chunks.remove(0);
             let mut config = self.chunks[self.chunks.len() - 1].right_config;
-            self.chunks.push(Chunk::generate(&mut config.0, &mut config.1, true));
             self.first_chunk_number += 1;
+            self.chunks.push(Chunk::generate(&mut config.0, &mut config.1, true, self.first_chunk_number * 32));
 
             diff = self.first_chunk_number - chunk_number;
         }
@@ -143,20 +178,13 @@ impl<'a> Map<'a> {
 impl<'a> std::ops::Index<(isize, isize)> for Map<'a> {
     type Output = Block;
 
-    #[allow(clippy::comparison_chain)]
     fn index(&self, (x, y): (isize, isize)) -> &Self::Output {
-        let mut column_index = x % 32;
-    
-        let mut chunk_number = (x - column_index) / 32;
-        if x < 0 && column_index < 0 {
-            chunk_number -= 1;
-            column_index += 32;
-        }
-        let chunk_index = chunk_number - self.first_chunk_number;
+        let (chunk, column) = x_to_chunk_and_column(x);
+        let chunk_index = chunk - self.first_chunk_number;
 
         if y > 0 && chunk_index > 0 {
             if let Some(chunk) = self.chunks.get(chunk_index as usize) {
-                if let Some(block) = chunk.blocks[column_index as usize].get(y as usize) {
+                if let Some(block) = chunk.blocks[column as usize].get(y as usize) {
                     return block;
                 }
             }
