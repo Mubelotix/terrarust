@@ -102,7 +102,9 @@ impl Chunk {
 
             let mut hasher = XxHash32::with_seed(42);
             hasher.write_isize(x);
-            let tree = hasher.finish() % biome.get_tree_prob() as u64 == 0;
+            let mut hasher2 = XxHash32::with_seed(42); // to avoid generating a tree if there is a tree at the left
+            hasher.write_isize(x-1);
+            let tree = hasher.finish() % biome.get_tree_prob() as u64 == 0 && hasher2.finish() % biome.get_tree_prob() as u64 != 0;
 
             *height += *slope;
             
