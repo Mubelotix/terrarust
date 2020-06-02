@@ -28,7 +28,11 @@ impl Textures {
 
         Textures {
             character: t.remove(0),
-            grass: ([t.remove(0), t.remove(0), t.remove(0), t.remove(0)], t.remove(0), t.remove(0)),
+            grass: (
+                [t.remove(0), t.remove(0), t.remove(0), t.remove(0)],
+                t.remove(0),
+                t.remove(0),
+            ),
             dirt: t.remove(0),
             tree: t.remove(0),
         }

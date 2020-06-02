@@ -1,4 +1,4 @@
-use crate::{player::Player, map::Biome};
+use crate::{map::Biome, player::Player};
 use std::hash::Hasher;
 use twox_hash::XxHash32;
 
@@ -27,7 +27,7 @@ pub fn x_to_chunk(x: isize) -> isize {
 
 pub fn x_to_chunk_and_column(x: isize) -> (isize, isize) {
     let mut column_index = x % 32;
-    
+
     let mut chunk_number = (x - column_index) / 32;
     if x < 0 && column_index < 0 {
         chunk_number -= 1;
@@ -45,13 +45,13 @@ pub fn x_to_biome(x: isize) -> Biome {
     hasher.write_isize(chunk);
     let hash = hasher.finish();
 
-    match hash%3 {
+    match hash % 3 {
         0 => Biome::Hills,
         1 => Biome::Grassland,
         2 => Biome::TemperateBroadleafForest,
         i => {
             log!("ERROR! Pattern {} not covered in x_to_biome function", i);
             Biome::Hills
-        },
+        }
     }
 }

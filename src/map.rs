@@ -1,8 +1,13 @@
-use crate::{coords::{map_to_screen, x_to_chunk, x_to_chunk_and_column, x_to_biome}, player::Player, textures::Textures, random::get_random_u32};
-use wasm_game_lib::graphics::canvas::Canvas;
+use crate::{
+    coords::{map_to_screen, x_to_biome, x_to_chunk, x_to_chunk_and_column},
+    player::Player,
+    random::get_random_u32,
+    textures::Textures,
+};
+use arr_macro::arr;
 use std::hash::Hasher;
 use twox_hash::XxHash32;
-use arr_macro::arr;
+use wasm_game_lib::graphics::canvas::Canvas;
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Block {
@@ -124,8 +129,16 @@ impl Chunk {
 
         Chunk {
             blocks,
-            left_config: if left_to_right {begin_config} else {(*height, *slope)},
-            right_config: if !left_to_right {begin_config} else {(*height, *slope)},
+            left_config: if left_to_right {
+                begin_config
+            } else {
+                (*height, *slope)
+            },
+            right_config: if !left_to_right {
+                begin_config
+            } else {
+                (*height, *slope)
+            },
         }
     }
 }
@@ -146,9 +159,10 @@ impl<'a> Map<'a> {
         let mut height: f64 = 20.0;
         let mut slope: f64 = 0.2;
         for i in -5..5 {
-            map.chunks.push(Chunk::generate(&mut height, &mut slope, true, i*32))
+            map.chunks
+                .push(Chunk::generate(&mut height, &mut slope, true, i * 32))
         }
-        
+
         map
     }
 
@@ -161,7 +175,15 @@ impl<'a> Map<'a> {
             self.chunks.remove(self.chunks.len() - 1);
             let mut config = self.chunks[0].left_config;
             self.first_chunk_number -= 1;
-            self.chunks.insert(0, Chunk::generate(&mut config.0, &mut config.1, false, self.first_chunk_number * 32));
+            self.chunks.insert(
+                0,
+                Chunk::generate(
+                    &mut config.0,
+                    &mut config.1,
+                    false,
+                    self.first_chunk_number * 32,
+                ),
+            );
 
             diff = self.first_chunk_number - chunk_number;
         }
@@ -170,7 +192,12 @@ impl<'a> Map<'a> {
             self.chunks.remove(0);
             let mut config = self.chunks[self.chunks.len() - 1].right_config;
             self.first_chunk_number += 1;
-            self.chunks.push(Chunk::generate(&mut config.0, &mut config.1, true, self.first_chunk_number * 32));
+            self.chunks.push(Chunk::generate(
+                &mut config.0,
+                &mut config.1,
+                true,
+                self.first_chunk_number * 32,
+            ));
 
             diff = self.first_chunk_number - chunk_number;
         }
@@ -191,14 +218,22 @@ impl<'a> Map<'a> {
                 match self[(x, y)] {
                     Block::Air => (),
                     Block::Grass => {
-                        canvas.draw_image((xisize, yisize), match (self[(x-1, y)] != Block::Air, self[(x+1, y)] != Block::Air) {
-                            (true, false) => &self.textures.grass.2,
-                            (false, true) => &self.textures.grass.1,
-                            _ => &self.textures.grass.0[x as usize % 4],
-                        });
+                        canvas.draw_image(
+                            (xisize, yisize),
+                            match (
+                                self[(x - 1, y)] != Block::Air,
+                                self[(x + 1, y)] != Block::Air,
+                            ) {
+                                (true, false) => &self.textures.grass.2,
+                                (false, true) => &self.textures.grass.1,
+                                _ => &self.textures.grass.0[x as usize % 4],
+                            },
+                        );
                     }
                     Block::Dirt => canvas.draw_image((xisize, yisize), &self.textures.dirt),
-                    Block::Tree => canvas.draw_image((xisize - 80.0, yisize - 240.0), &self.textures.tree),
+                    Block::Tree => {
+                        canvas.draw_image((xisize - 80.0, yisize - 240.0), &self.textures.tree)
+                    }
                 }
             }
         }
@@ -219,7 +254,7 @@ impl<'a> std::ops::Index<(isize, isize)> for Map<'a> {
                 }
             }
         }
-        
+
         &Block::Air
     }
 }
