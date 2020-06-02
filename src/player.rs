@@ -25,29 +25,29 @@ impl Player {
             || !map[(self.x.ceil() as isize, self.y.floor() as isize)].can_pass_through()
     }
 
-    pub fn can_move_right(&self, map: &Map) -> bool {
-        map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize)].can_pass_through()
-            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 1)].can_pass_through()
-            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 2)].can_pass_through()
-            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 3)].can_pass_through()
-            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 4)].can_pass_through()
-            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 5)].can_pass_through()
-            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 6)].can_pass_through()
+    pub fn can_move_right_by(&self, distance: f64, map: &Map) -> bool {
+        map[((self.x + distance).ceil() as isize, self.y.floor() as isize)].can_pass_through()
+            && map[((self.x + distance).ceil() as isize, self.y.floor() as isize - 1)].can_pass_through()
+            && map[((self.x + distance).ceil() as isize, self.y.floor() as isize - 2)].can_pass_through()
+            && map[((self.x + distance).ceil() as isize, self.y.floor() as isize - 3)].can_pass_through()
+            && map[((self.x + distance).ceil() as isize, self.y.floor() as isize - 4)].can_pass_through()
+            && map[((self.x + distance).ceil() as isize, self.y.floor() as isize - 5)].can_pass_through()
+            && map[((self.x + distance).ceil() as isize, self.y.floor() as isize - 6)].can_pass_through()
     }
 
-    pub fn can_move_left(&self, map: &Map) -> bool {
-        map[((self.x - 0.3).floor() as isize, self.y.floor() as isize)].can_pass_through()
-            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 1)]
+    pub fn can_move_left_by(&self, distance: f64, map: &Map) -> bool {
+        map[((self.x - distance).floor() as isize, self.y.floor() as isize)].can_pass_through()
+            && map[((self.x - distance).floor() as isize, self.y.floor() as isize - 1)]
                 .can_pass_through()
-            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 2)]
+            && map[((self.x - distance).floor() as isize, self.y.floor() as isize - 2)]
                 .can_pass_through()
-            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 3)]
+            && map[((self.x - distance).floor() as isize, self.y.floor() as isize - 3)]
                 .can_pass_through()
-            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 4)]
+            && map[((self.x - distance).floor() as isize, self.y.floor() as isize - 4)]
                 .can_pass_through()
-            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 5)]
+            && map[((self.x - distance).floor() as isize, self.y.floor() as isize - 5)]
                 .can_pass_through()
-            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 6)]
+            && map[((self.x - distance).floor() as isize, self.y.floor() as isize - 6)]
                 .can_pass_through()
     }
 
@@ -65,14 +65,34 @@ impl Player {
     }
 
     pub fn handle_events(&mut self, keys: (bool, bool, bool, bool), map: &Map) {
-        if keys.1 && self.can_move_right(&map) {
-            self.x += 0.3;
+        if keys.1 {
+            if self.can_move_right_by(0.3, &map) {
+                self.x += 0.3;
+            }
+
+            if self.is_touching_the_surface(&map) && !self.can_move_right_by(0.9, &map) {
+                self.y -= 1.0;
+                if self.can_move_right_by(0.9, &map) {
+                    self.speed_y = -0.25;
+                }
+                self.y += 1.0;
+            }
         }
         if keys.0 && self.is_touching_the_surface(&map) {
             self.speed_y = -0.40;
         }
-        if keys.3 && self.can_move_left(&map) {
-            self.x -= 0.3;
+        if keys.3 {
+            if self.can_move_left_by(0.3, &map) {
+                self.x -= 0.3;
+            }
+
+            if self.is_touching_the_surface(&map) && !self.can_move_left_by(0.9, &map) {
+                self.y -= 1.0;
+                if self.can_move_left_by(0.9, &map) {
+                    self.speed_y = -0.25;
+                }
+                self.y += 1.0;
+            }
         }
 
         if self.speed_y < 0.0 {
