@@ -221,11 +221,11 @@ impl<'a> Map<'a> {
                         canvas.draw_image(
                             (xisize, yisize),
                             match (
-                                self[(x - 1, y)] != Block::Air,
-                                self[(x + 1, y)] != Block::Air,
+                                self[(x - 1, y)].can_pass_through(),
+                                self[(x + 1, y)].can_pass_through(),
                             ) {
-                                (true, false) => &self.textures.grass.2,
-                                (false, true) => &self.textures.grass.1,
+                                (false, true) => &self.textures.grass.2,
+                                (true, false) => &self.textures.grass.1,
                                 _ => &self.textures.grass.0[x as usize % 4],
                             },
                         );
