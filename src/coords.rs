@@ -45,10 +45,10 @@ pub fn x_to_biome(x: isize) -> Biome {
     hasher.write_isize(chunk);
     let hash = hasher.finish();
 
-    #[allow(clippy::modulo_one)]
-    match hash%2 {
+    match hash%3 {
         0 => Biome::Hills,
         1 => Biome::Grassland,
+        2 => Biome::TemperateBroadleafForest,
         i => {
             log!("ERROR! Pattern {} not covered in x_to_biome function", i);
             Biome::Hills

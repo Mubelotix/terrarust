@@ -12,31 +12,54 @@ pub enum Block {
     Tree,
 }
 
+impl Block {
+    pub fn can_pass_through(&self) -> bool {
+        match self {
+            Block::Grass => false,
+            Block::Air => true,
+            Block::Dirt => false,
+            Block::Tree => true,
+        }
+    }
+}
+
 #[derive(Debug)]
 pub enum Biome {
     Hills,
     Grassland,
+    TemperateBroadleafForest,
 }
 
 impl Biome {
     fn get_frequency(&self) -> f64 {
         match self {
             Biome::Hills => 0.2,
-            Biome::Grassland => 0.07,
+            Biome::Grassland => 0.06,
+            Biome::TemperateBroadleafForest => 0.08,
         }
     }
 
     fn get_max_slope(&self) -> f64 {
         match self {
-            Biome::Hills => 1.5,
+            Biome::Hills => 0.9,
             Biome::Grassland => 0.5,
+            Biome::TemperateBroadleafForest => 0.7,
         }
     }
 
     fn get_height(&self) -> std::ops::Range<f64> {
         match self {
-            Biome::Hills => (20.0..60.0),
-            Biome::Grassland => (20.0..60.0),
+            Biome::Hills => (30.0..40.0),
+            Biome::Grassland => (30.0..40.0),
+            Biome::TemperateBroadleafForest => (30.0..40.0),
+        }
+    }
+
+    fn get_tree_prob(&self) -> u16 {
+        match self {
+            Biome::Hills => 50,
+            Biome::Grassland => 32,
+            Biome::TemperateBroadleafForest => 10,
         }
     }
 }
@@ -49,7 +72,7 @@ pub struct Chunk {
 
 impl Chunk {
     #[allow(clippy::cognitive_complexity)]
-    pub fn generate(height: &mut f64, slope: &mut f64, left_to_right: bool, x: isize) -> Chunk {
+    pub fn generate(height: &mut f64, slope: &mut f64, left_to_right: bool, mut x: isize) -> Chunk {
         let begin_config: (f64, f64) = (*height, *slope);
         let biome = x_to_biome(x);
         log!("generating {:?}", biome);
@@ -72,12 +95,16 @@ impl Chunk {
                 *slope -= biome.get_frequency() / 3.0;
             }
 
+            let mut hasher = XxHash32::with_seed(42);
+            hasher.write_isize(x);
+            let tree = hasher.finish() % biome.get_tree_prob() as u64 == 0;
+
             *height += *slope;
             
             if left_to_right {
-                //x += 1;
+                x += 1;
             } else {
-                //x -= 1;
+                x -= 1;
             }
             
             let mut column = [Block::Dirt; 2048];
@@ -85,6 +112,9 @@ impl Chunk {
                 column[y] = Block::Air;
             }
             column[height.floor() as usize] = Block::Grass;
+            if tree && height.floor() as usize > 0 {
+                column[height.floor() as usize - 1] = Block::Tree;
+            }
             column
         };32);
 
@@ -123,7 +153,7 @@ impl<'a> Map<'a> {
     }
 
     pub fn update_chunks(&mut self, player: &Player) {
-        let mut chunk_number = x_to_chunk(player.x.floor() as isize);
+        let chunk_number = x_to_chunk(player.x.floor() as isize);
 
         let mut diff = self.first_chunk_number - chunk_number;
         while diff > -4 {

@@ -16,44 +16,44 @@ impl Player {
     }
 
     pub fn is_touching_the_surface(&self, map: &Map) -> bool {
-        map[(self.x.floor() as isize, (self.y + 0.03).floor() as isize)] != Block::Air
-            || map[(self.x.ceil() as isize, (self.y + 0.03).floor() as isize)] != Block::Air
+        !map[(self.x.floor() as isize, (self.y + 0.03).floor() as isize)].can_pass_through()
+            || !map[(self.x.ceil() as isize, (self.y + 0.03).floor() as isize)].can_pass_through()
     }
 
     pub fn is_under_the_surface(&self, map: &Map) -> bool {
-        map[(self.x.floor() as isize, self.y.floor() as isize)] != Block::Air
-            || map[(self.x.ceil() as isize, self.y.floor() as isize)] != Block::Air
+        !map[(self.x.floor() as isize, self.y.floor() as isize)].can_pass_through()
+            || !map[(self.x.ceil() as isize, self.y.floor() as isize)].can_pass_through()
     }
 
     pub fn can_move_right(&self, map: &Map) -> bool {
-        map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize)] == Block::Air
-            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 1)] == Block::Air
-            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 2)] == Block::Air
-            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 3)] == Block::Air
-            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 4)] == Block::Air
-            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 5)] == Block::Air
-            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 6)] == Block::Air
+        map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize)].can_pass_through()
+            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 1)].can_pass_through()
+            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 2)].can_pass_through()
+            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 3)].can_pass_through()
+            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 4)].can_pass_through()
+            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 5)].can_pass_through()
+            && map[((self.x + 0.3).ceil() as isize, self.y.floor() as isize - 6)].can_pass_through()
     }
 
     pub fn can_move_left(&self, map: &Map) -> bool {
-        map[((self.x - 0.3).floor() as isize, self.y.floor() as isize)] == Block::Air
-            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 1)] == Block::Air
-            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 2)] == Block::Air
-            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 3)] == Block::Air
-            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 4)] == Block::Air
-            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 5)] == Block::Air
-            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 6)] == Block::Air
+        map[((self.x - 0.3).floor() as isize, self.y.floor() as isize)].can_pass_through()
+            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 1)].can_pass_through()
+            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 2)].can_pass_through()
+            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 3)].can_pass_through()
+            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 4)].can_pass_through()
+            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 5)].can_pass_through()
+            && map[((self.x - 0.3).floor() as isize, self.y.floor() as isize - 6)].can_pass_through()
     }
 
     pub fn can_move_up_by(&self, distance: f64, map: &Map) -> bool {
         map[(
             self.x.floor() as isize,
             (self.y + distance).floor() as isize - 7,
-        )] == Block::Air
+        )].can_pass_through()
             && map[(
                 self.x.ceil() as isize,
                 (self.y + distance).floor() as isize - 7,
-            )] == Block::Air
+            )].can_pass_through()
     }
 
     pub fn handle_events(&mut self, keys: (bool, bool, bool, bool), map: &Map) {
