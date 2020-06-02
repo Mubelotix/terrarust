@@ -74,27 +74,29 @@ impl<'a> Map<'a> {
     }
 
     pub fn update_chunks(&mut self, player: &Player) {
-        /*let mut chunk_number = (player.x - player.x % 32.0) as isize;
+        let mut chunk_number = (player.x - player.x % 32.0) as isize;
         chunk_number /= 32;
         if player.x.floor() % 10.0 == 0.0 {
             log!("{} {}",chunk_number, self.first_chunk_number);
         }
 
         let mut diff = self.first_chunk_number - chunk_number;
-        while diff > 1 {
+        while diff > -4 {
             log!("move left");
             self.chunks.remove(self.chunks.len() - 1);
             self.chunks.insert(0, Chunk::generate(&mut 20.0, &mut 0.0));
             self.first_chunk_number -= 1;
 
             diff = self.first_chunk_number - chunk_number;
-        }*//*
-        while self.first_chunk_number + 10 < chunk_number + 4 {
+        }
+        while diff < -4 {
             log!("move right");
             self.chunks.remove(0);
             self.chunks.push(Chunk::generate(&mut 20.0, &mut 0.0));
             self.first_chunk_number += 1;
-        }*/
+
+            diff = self.first_chunk_number - chunk_number;
+        }
     }
 }
 
