@@ -74,9 +74,6 @@ impl<'a> Map<'a> {
     pub fn update_chunks(&mut self, player: &Player) {
         let mut chunk_number = (player.x - player.x % 32.0) as isize;
         chunk_number /= 32;
-        if player.x.floor() % 10.0 == 0.0 {
-            log!("{} {}",chunk_number, self.first_chunk_number);
-        }
 
         let mut diff = self.first_chunk_number - chunk_number;
         while diff > -4 {
