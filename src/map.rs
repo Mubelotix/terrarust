@@ -27,11 +27,9 @@ impl Chunk {
                 *slope = 1.5;
             }
             if *height > 40.0 && *slope > -0.4 {
-                log!("redressing!");
                 *slope -= 0.08;
             }
             if *height < 10.0 && *slope < 0.4 {
-                log!("slowing down!");
                 *slope += 0.08;
             }
             *height += *slope;
