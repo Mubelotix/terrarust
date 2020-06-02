@@ -44,7 +44,7 @@ pub async fn start() -> Result<(), JsValue> {
 
     let textures = Textures::load(&mut canvas).await;
 
-    let map = Map::new(&textures);
+    let mut map = Map::new(&textures);
     let mut player = Player::new();
     let chara = Sprite::new(
         (screen_center.0 as f64, screen_center.1 as f64),
@@ -80,6 +80,7 @@ pub async fn start() -> Result<(), JsValue> {
         }
 
         player.handle_events(direction_keys, &map);
+        map.update_chunks(&player);
 
         canvas.clear_with_color(Color::cyan());
         map.draw_on_canvas(&mut canvas, &player, screen_center);

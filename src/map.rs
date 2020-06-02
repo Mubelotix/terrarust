@@ -62,15 +62,39 @@ impl<'a> Map<'a> {
         let mut map = Map {
             chunks: Vec::new(),
             textures,
-            first_chunk_number: 0,
+            first_chunk_number: -5,
         };
         let mut height: f64 = 20.0;
         let mut slope: f64 = 0.2;
-        for _i in 0..10 {
+        for _i in -5..5 {
             map.chunks.push(Chunk::generate(&mut height, &mut slope))
         }
         
         map
+    }
+
+    pub fn update_chunks(&mut self, player: &Player) {
+        /*let mut chunk_number = (player.x - player.x % 32.0) as isize;
+        chunk_number /= 32;
+        if player.x.floor() % 10.0 == 0.0 {
+            log!("{} {}",chunk_number, self.first_chunk_number);
+        }
+
+        let mut diff = self.first_chunk_number - chunk_number;
+        while diff > 1 {
+            log!("move left");
+            self.chunks.remove(self.chunks.len() - 1);
+            self.chunks.insert(0, Chunk::generate(&mut 20.0, &mut 0.0));
+            self.first_chunk_number -= 1;
+
+            diff = self.first_chunk_number - chunk_number;
+        }*//*
+        while self.first_chunk_number + 10 < chunk_number + 4 {
+            log!("move right");
+            self.chunks.remove(0);
+            self.chunks.push(Chunk::generate(&mut 20.0, &mut 0.0));
+            self.first_chunk_number += 1;
+        }*/
     }
 }
 
@@ -108,16 +132,15 @@ impl<'a> std::ops::Index<(isize, isize)> for Map<'a> {
     #[allow(clippy::comparison_chain)]
     fn index(&self, (x, y): (isize, isize)) -> &Self::Output {
         let mut column_index = x % 32;
-        let mut chunk_number = x - column_index;
-        chunk_number /= 32;
-        let mut chunk_index = self.first_chunk_number - chunk_number;
-        if column_index < 0 {
-            column_index = -column_index;
+    
+        let mut chunk_number = (x - column_index) / 32;
+        if x < 0 && column_index < 0 {
+            chunk_number -= 1;
+            column_index += 32;
         }
-        if chunk_index < 0 {
-            chunk_index = -chunk_index;
-        }
-        if y > 0 {
+        let chunk_index = chunk_number - self.first_chunk_number;
+
+        if y > 0 && chunk_index > 0 {
             if let Some(chunk) = self.chunks.get(chunk_index as usize) {
                 if let Some(block) = chunk.blocks[column_index as usize].get(y as usize) {
                     return block;
