@@ -13,13 +13,17 @@ pub enum Block {
 
 pub struct Chunk {
     blocks: [[Block; 2048]; 32],
+    pub left_config: (f64, f64),  // (height, slope)
+    pub right_config: (f64, f64), // idem
 }
 
 impl Chunk {
     #[allow(clippy::cognitive_complexity)]
-    pub fn generate(height: &mut f64, slope: &mut f64) -> Chunk {
-        let mut x = 0;
-        let blocks = arr!({
+    pub fn generate(height: &mut f64, slope: &mut f64, left_to_right: bool) -> Chunk {
+        let begin_config: (f64, f64) = (*height, *slope);
+
+        let mut x: isize = 0;
+        let mut blocks = arr!({
             let mut random: f64 = get_random_u32() as f64 - 2_147_483_647.0;
             random /= 2_147_483_647.0;
             *slope += random / 5.0;
@@ -33,7 +37,12 @@ impl Chunk {
                 *slope += 0.08;
             }
             *height += *slope;
-            x += 1;
+            
+            if left_to_right {
+                x += 1;
+            } else {
+                x -= 1;
+            }
             
             let mut column = [Block::Dirt; 2048];
             for y in 0..height.floor() as usize {
@@ -43,8 +52,14 @@ impl Chunk {
             column
         };32);
 
+        if !left_to_right {
+            blocks.reverse();
+        }
+
         Chunk {
-            blocks
+            blocks,
+            left_config: if left_to_right {begin_config} else {(*height, *slope)},
+            right_config: if !left_to_right {begin_config} else {(*height, *slope)},
         }
     }
 }
@@ -65,7 +80,7 @@ impl<'a> Map<'a> {
         let mut height: f64 = 20.0;
         let mut slope: f64 = 0.2;
         for _i in -5..5 {
-            map.chunks.push(Chunk::generate(&mut height, &mut slope))
+            map.chunks.push(Chunk::generate(&mut height, &mut slope, true))
         }
         
         map
@@ -79,7 +94,8 @@ impl<'a> Map<'a> {
         while diff > -4 {
             log!("move left");
             self.chunks.remove(self.chunks.len() - 1);
-            self.chunks.insert(0, Chunk::generate(&mut 20.0, &mut 0.0));
+            let mut config = self.chunks[0].left_config;
+            self.chunks.insert(0, Chunk::generate(&mut config.0, &mut config.1, false));
             self.first_chunk_number -= 1;
 
             diff = self.first_chunk_number - chunk_number;
@@ -87,7 +103,8 @@ impl<'a> Map<'a> {
         while diff < -4 {
             log!("move right");
             self.chunks.remove(0);
-            self.chunks.push(Chunk::generate(&mut 20.0, &mut 0.0));
+            let mut config = self.chunks[self.chunks.len() - 1].right_config;
+            self.chunks.push(Chunk::generate(&mut config.0, &mut config.1, true));
             self.first_chunk_number += 1;
 
             diff = self.first_chunk_number - chunk_number;
