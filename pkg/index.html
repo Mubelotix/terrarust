@@ -11,6 +11,11 @@
         canvas {
             width: 100%;
             height: 100%;
+            -webkit-user-select: none; 
+            -webkit-touch-callout: none; 
+            -moz-user-select: none; 
+            -ms-user-select: none; 
+            user-select: none;
         }
     </style>
 </head>
@@ -22,6 +27,10 @@
             await init();
         }
         run();
+    </script>
+    <script type="text/javascript">
+        document.oncontextmenu =new Function("return false;")
+        document.onselectstart =new Function("return false;")
     </script>
 </body>
 </html>
