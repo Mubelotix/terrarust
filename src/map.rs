@@ -1,7 +1,6 @@
 use crate::{
     coords::{map_to_screen, x_to_biome, x_to_chunk, x_to_chunk_and_column},
     player::Player,
-    random::get_random_u32,
     textures::Textures,
 };
 use arr_macro::arr;
@@ -18,7 +17,7 @@ pub enum Block {
 }
 
 impl Block {
-    pub fn can_pass_through(&self) -> bool {
+    pub fn can_pass_through(self) -> bool {
         match self {
             Block::Grass => false,
             Block::Air => true,
@@ -77,13 +76,18 @@ pub struct Chunk {
 
 impl Chunk {
     #[allow(clippy::cognitive_complexity)]
+    #[allow(clippy::eval_order_dependence)]
     pub fn generate(height: &mut f64, slope: &mut f64, left_to_right: bool, mut x: isize) -> Chunk {
         let begin_config: (f64, f64) = (*height, *slope);
         let biome = x_to_biome(x);
         log!("generating {:?}", biome);
 
         let mut blocks = arr!({
-            let mut random: f64 = get_random_u32() as f64 - 2_147_483_647.0;
+            let mut hasher = XxHash32::with_seed(42);
+            hasher.write_isize(x);
+            let hash = hasher.finish();
+
+            let mut random: f64 = hash as f64 - 2_147_483_647.0;
             random /= 2_147_483_647.0;
             *slope += random * biome.get_frequency();
 
@@ -100,11 +104,9 @@ impl Chunk {
                 *slope -= biome.get_frequency() / 3.0;
             }
 
-            let mut hasher = XxHash32::with_seed(42);
-            hasher.write_isize(x);
             let mut hasher2 = XxHash32::with_seed(42); // to avoid generating a tree if there is a tree at the left
             hasher.write_isize(x-1);
-            let tree = hasher.finish() % biome.get_tree_prob() as u64 == 0 && hasher2.finish() % biome.get_tree_prob() as u64 != 0;
+            let tree = hash % biome.get_tree_prob() as u64 == 0 && hasher2.finish() % biome.get_tree_prob() as u64 != 0;
 
             *height += *slope;
             

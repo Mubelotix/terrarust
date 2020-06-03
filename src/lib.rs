@@ -4,7 +4,7 @@ use wasm_bindgen::prelude::*;
 use wasm_game_lib::inputs::event::types::*;
 use wasm_game_lib::system::sleep;
 use wasm_game_lib::{
-    graphics::{color::Color, sprite::Sprite, window::Window},
+    graphics::{color::Color, window::Window},
     inputs::{
         event::Event,
         keyboard::{Key, KeyboardEvent},
@@ -25,7 +25,6 @@ mod player;
 mod progress_bar;
 mod textures;
 use map::Map;
-mod random;
 use player::Player;
 use textures::Textures;
 
