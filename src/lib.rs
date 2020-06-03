@@ -45,12 +45,8 @@ pub async fn start() -> Result<(), JsValue> {
     let textures = Textures::load(&mut canvas).await;
 
     let mut map = Map::new(&textures);
-    let mut player = Player::new();
-    let chara = Sprite::new(
-        (screen_center.0 as f64, screen_center.1 as f64),
-        &textures.character,
-        (25.0, 128.0),
-    );
+    let mut player = Player::new(&textures);
+    let mut frame = 0;
 
     let mut direction_keys = (false, false, false, false);
 
@@ -79,14 +75,14 @@ pub async fn start() -> Result<(), JsValue> {
             //log!("{:?}", event);
         }
 
-        player.handle_events(direction_keys, &map);
+        player.handle_events(direction_keys, &map, frame);
         map.update_chunks(&player);
 
         canvas.clear_with_color(Color::cyan());
         map.draw_on_canvas(&mut canvas, &player, screen_center);
-        canvas.draw(&chara);
-        //scanvas.draw(&units);
+        player.draw_on_canvas(&mut canvas, screen_center, frame);
 
         sleep(Duration::from_millis(16)).await;
+        frame += 1;
     }
 }
