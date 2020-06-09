@@ -8,6 +8,9 @@ pub struct Textures {
     pub grass: Image,
     pub dirt: Image,
     pub tree: Image,
+    pub item_log: Image,
+    pub item_wood_stick: Image,
+    pub item_foliage: Image,
 }
 
 impl Textures {
@@ -21,6 +24,9 @@ impl Textures {
                 "ressources/blocks/grass.png",
                 "ressources/blocks/dirt.png",
                 "ressources/tree.png",
+                "ressources/items/log.png",
+                "ressources/items/wood_stick.png",
+                "ressources/items/foliage.png",
             ],
             &mut canvas,
         )
@@ -31,12 +37,18 @@ impl Textures {
             grass: t.remove(0),
             dirt: t.remove(0),
             tree: t.remove(0),
+            item_log: t.remove(0),
+            item_wood_stick: t.remove(0),
+            item_foliage: t.remove(0),
         }
     }
 
     pub fn get_for_item(&self, item: Item) -> &Image {
         match item {
             Item::Dirt => &self.dirt,
+            Item::Log => &self.item_log,
+            Item::WoodStick => &self.item_wood_stick,
+            Item::Foliage => &self.item_foliage,
         }
     }
 }

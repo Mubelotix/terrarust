@@ -32,7 +32,7 @@ impl Block {
             Block::Grass => vec![Item::Dirt],
             Block::Dirt => vec![Item::Dirt],
             Block::Air => vec![],
-            Block::Tree => vec![],
+            Block::Tree => vec![Item::Log, Item::WoodStick, Item::Foliage],
         }
     }
 }

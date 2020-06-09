@@ -1,6 +1,9 @@
 #[derive(Copy, Clone, PartialEq)]
 pub enum Item {
     Dirt,
+    Log,
+    WoodStick,
+    Foliage,
 }
 
 pub struct Inventory {
