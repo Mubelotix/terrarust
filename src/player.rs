@@ -1,6 +1,18 @@
 use crate::{map::Map, textures::Textures, items::*};
-use wasm_game_lib::{graphics::{canvas::*}};
+use wasm_game_lib::{graphics::{canvas::*, color::Color}};
 use wasm_bindgen::JsValue;
+
+const INVENTORY_BORDER_STYLE: LineStyle = LineStyle {
+    cap: LineCap::Square,
+    join: LineJoin::Miter,
+    color: Color {
+        red: 255,
+        green: 255,
+        blue: 255,
+        alpha: 150,
+    },
+    size: 3.0,
+};
 
 pub struct Player<'a> {
     pub x: f64,
@@ -138,7 +150,7 @@ impl<'a> Player<'a> {
         self.is_inventory_open = !self.is_inventory_open;
     }
 
-    pub fn draw_on_canvas(&mut self, canvas: &mut Canvas, screen_center: (isize, isize), mut frame: usize) {
+    pub fn draw_on_canvas(&mut self, mut canvas: &mut Canvas, screen_center: (isize, isize), mut frame: usize) {
         if frame - self.last_frame_running < 6 {
             frame -= frame % 5;
             frame /= 5;
@@ -150,11 +162,12 @@ impl<'a> Player<'a> {
         }
 
         if self.is_inventory_open {
+            INVENTORY_BORDER_STYLE.apply_on_canvas(&mut canvas);
             let context = canvas.get_2d_canvas_rendering_context();
             let padding = ((screen_center.0 as f64 * 2.0 - 100.0) - 9.0 * 64.0) / 10.0;
 
             context.begin_path();
-            context.set_fill_style(&JsValue::from_str("rgba(24, 28, 39, 0.35)"));
+            context.set_fill_style(&JsValue::from_str("rgba(24, 28, 39, 0.9)"));
             context.fill_rect(
                 50.0,
                 50.0,
@@ -163,7 +176,7 @@ impl<'a> Player<'a> {
             );
             context.stroke();
 
-            context.set_fill_style(&JsValue::from_str("rgba(255, 255, 255, 0.3)"));
+            context.set_fill_style(&JsValue::from_str("rgba(255, 255, 255, 0.23)"));
             
             for idx in 0..27 {
                 let x = idx % 9;
@@ -174,6 +187,13 @@ impl<'a> Player<'a> {
                     50.0 + padding + y as f64 * (64.0 + padding),
                     64.0,
                     64.0,
+                );
+
+                context.rect(
+                    50.0 + padding + x as f64 * (64.0 + padding),
+                    50.0 + padding + y as f64 * (64.0 + padding),
+                    64.0,
+                    64.0
                 );
 
                 if let Some((item, _quantity)) = self.inventory[idx] {
