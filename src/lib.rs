@@ -8,15 +8,11 @@ use wasm_game_lib::{
     inputs::{
         event::Event,
         keyboard::{Key, KeyboardEvent},
-        mouse::{start_recording_mouse_events, get_mouse_position, is_mouse_pressed},
+        mouse::{start_recording_mouse_events, get_mouse_position, is_pressed, Button},
     },
+    log,
+    elog
 };
-
-macro_rules! log {
-    ( $( $t:tt )* ) => {
-        web_sys::console::log_1(&format!( $( $t )* ).into());
-    }
-}
 
 mod items;
 mod coords;
@@ -75,7 +71,7 @@ pub async fn start() -> Result<(), JsValue> {
             }
         }
 
-        if is_mouse_pressed() {
+        if is_pressed(Button::Main) {
             let (x, y) = crate::coords::screen_to_map(get_mouse_position().0 as f64, get_mouse_position().1 as f64, &player, screen_center);
             if map[(x, y)] != Block::Air {
                 let items = map[(x, y)].as_item();

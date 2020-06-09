@@ -7,7 +7,7 @@ use crate::{
 use arr_macro::arr;
 use std::hash::Hasher;
 use twox_hash::XxHash32;
-use wasm_game_lib::graphics::canvas::Canvas;
+use wasm_game_lib::{graphics::canvas::Canvas, log};
 
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum Block {

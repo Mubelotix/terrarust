@@ -1,6 +1,7 @@
 use crate::{map::Biome, player::Player};
 use std::hash::Hasher;
 use twox_hash::XxHash32;
+use wasm_game_lib::elog;
 
 pub fn screen_to_map(x: f64, y: f64, player: &Player, screen_center: (isize, isize)) -> (isize, isize) {
     let a = screen_center.0 as f64 - x;
@@ -56,7 +57,7 @@ pub fn x_to_biome(x: isize) -> Biome {
         1 => Biome::Grassland,
         2 => Biome::TemperateBroadleafForest,
         i => {
-            log!("ERROR! Pattern {} not covered in x_to_biome function", i);
+            elog!("ERROR! Pattern {} not covered in x_to_biome function", i);
             Biome::Hills
         }
     }
