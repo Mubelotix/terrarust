@@ -43,7 +43,7 @@ impl Textures {
 
     pub fn get_for_item(&self, item: Item) -> &Image {
         match item {
-
+            Item::Dirt => &self.dirt,
         }
     }
 }

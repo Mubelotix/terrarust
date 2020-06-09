@@ -10,7 +10,7 @@ pub struct Player<'a> {
     last_frame_running: usize,
     to_left: bool,
     is_inventory_open: bool,
-    inventory: Inventory,
+    pub inventory: Inventory,
 }
 
 impl<'a> Player<'a> {

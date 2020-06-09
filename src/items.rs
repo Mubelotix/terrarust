@@ -1,6 +1,6 @@
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum Item {
-
+    Dirt,
 }
 
 pub struct Inventory {
@@ -16,6 +16,26 @@ impl Inventory {
         Inventory {
             slots
         }
+    }
+
+    pub fn push(&mut self, item: Item) -> bool {
+        for slot in &mut self.slots {
+            if let Some((slot_item, quantity)) = slot {
+                if slot_item == &item {
+                    *quantity += 1;
+                    return true;
+                }
+            }
+        }
+
+        for slot in &mut self.slots {
+            if slot.is_none() {
+                *slot = Some((item, 1));
+                return true;
+            }
+        }
+        
+        false
     }
 }
 

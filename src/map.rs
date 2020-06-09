@@ -2,6 +2,7 @@ use crate::{
     coords::{map_to_screen, x_to_biome, x_to_chunk, x_to_chunk_and_column},
     player::Player,
     textures::Textures,
+    items::Item,
 };
 use arr_macro::arr;
 use std::hash::Hasher;
@@ -20,9 +21,18 @@ impl Block {
     pub fn can_pass_through(self) -> bool {
         match self {
             Block::Grass => false,
-            Block::Air => true,
             Block::Dirt => false,
+            Block::Air => true,
             Block::Tree => true,
+        }
+    }
+
+    pub fn as_item(&self) -> Vec<Item> {
+        match self {
+            Block::Grass => vec![Item::Dirt],
+            Block::Dirt => vec![Item::Dirt],
+            Block::Air => vec![],
+            Block::Tree => vec![],
         }
     }
 }
@@ -281,7 +291,7 @@ impl<'a> std::ops::IndexMut<(isize, isize)> for Map<'a> {
         if self.air != Block::Air {
             self.air = Block::Air;
         }
-        
+
         &mut self.air
     }
 }

@@ -25,7 +25,7 @@ mod map;
 mod player;
 mod progress_bar;
 mod textures;
-use map::Map;
+use map::{Map, Block};
 use player::Player;
 use textures::Textures;
 
@@ -77,6 +77,12 @@ pub async fn start() -> Result<(), JsValue> {
 
         if is_mouse_pressed() {
             let (x, y) = crate::coords::screen_to_map(get_mouse_position().0 as f64, get_mouse_position().1 as f64, &player, screen_center);
+            if map[(x, y)] != Block::Air {
+                let items = map[(x, y)].as_item();
+                for item in items {
+                    player.inventory.push(item);
+                }
+            }
             map[(x, y)] = crate::map::Block::Air;
         }
 
