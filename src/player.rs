@@ -33,7 +33,7 @@ pub struct Player<'a> {
     last_frame_running: usize,
     to_left: bool,
     is_inventory_open: bool,
-    selected_slot: u8,
+    pub selected_slot: u8,
     pub inventory: Inventory,
 }
 
@@ -230,10 +230,6 @@ impl<'a> Player<'a> {
                     64.0,
                 );
 
-                if x == self.selected_slot {
-                    SELECTED_INVENTORY_BORDER_STYLE.apply_on_canvas(&mut canvas);
-                }
-
                 canvas.context.rect(
                     screen_center.0 as f64 - 4.5 * 64.0 + x as f64 * 64.0,
                     screen_center.1 as f64 * 2.0 - 64.0,
@@ -241,15 +237,20 @@ impl<'a> Player<'a> {
                     64.0
                 );
 
-                if x == self.selected_slot {
-                    canvas.context.stroke();
-                    INVENTORY_BORDER_STYLE.apply_on_canvas(&mut canvas);
-                }
-
                 if let Some((item, _quantity)) = self.inventory[x as usize] {
                     canvas.context.draw_image_with_html_image_element(self.textures.get_for_item(item).get_html_element(), screen_center.0 as f64 - 4.5 * 64.0 + x as f64 * 64.0, screen_center.1 as f64 * 2.0 - 64.0).unwrap();
                 }
             }
+            canvas.context.stroke();
+
+            canvas.context.begin_path();
+            SELECTED_INVENTORY_BORDER_STYLE.apply_on_canvas(&mut canvas);
+            canvas.context.rect(
+                screen_center.0 as f64 - 4.5 * 64.0 + self.selected_slot as f64 * 64.0,
+                screen_center.1 as f64 * 2.0 - 64.0,
+                64.0,
+                64.0
+            );
             canvas.context.stroke();
         }
     }

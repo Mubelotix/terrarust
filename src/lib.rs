@@ -8,7 +8,7 @@ use wasm_game_lib::{
     inputs::{
         event::Event,
         keyboard::{Key, KeyboardEvent},
-        mouse::{start_recording_mouse_events, get_mouse_position, is_pressed, Button},
+        mouse::{start_recording_mouse_events, get_mouse_position, is_pressed, Button, MouseEvent},
     },
     log,
     elog
@@ -31,7 +31,7 @@ pub async fn start() -> Result<(), JsValue> {
     start_recording_mouse_events();
 
     let (mut window, mut canvas) =
-        Window::init_with_events(KEYBOARD_EVENT + RESIZE_EVENT + MOUSE_EVENT);
+        Window::init_with_events(KEYBOARD_EVENT + MOUSE_EVENT);
 
     let screen_center = (
         canvas.get_width() as isize / 2,
@@ -67,6 +67,16 @@ pub async fn start() -> Result<(), JsValue> {
                         _ => (),
                     },
                 },
+                Event::MouseEvent(event) => match event {
+                    MouseEvent::Scroll(_, movement, _, _) => {
+                        if movement > 0.0 && player.selected_slot < 8 {
+                            player.selected_slot += 1;
+                        } else if movement < 0.0 && player.selected_slot > 0 {
+                            player.selected_slot -= 1;
+                        }
+                    }
+                    _ => (),
+                }
                 _ => (),
             }
         }
