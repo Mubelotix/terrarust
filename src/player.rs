@@ -1,5 +1,6 @@
-use crate::{map::Map, textures::Textures};
-use wasm_game_lib::{graphics::{canvas::Canvas}};
+use crate::{map::Map, textures::Textures, items::*};
+use wasm_game_lib::{graphics::{canvas::*, color::Color}};
+use wasm_bindgen::JsValue;
 
 pub struct Player<'a> {
     pub x: f64,
@@ -8,6 +9,8 @@ pub struct Player<'a> {
     textures: &'a Textures,
     last_frame_running: usize,
     to_left: bool,
+    is_inventory_open: bool,
+    inventory: Inventory,
 }
 
 impl<'a> Player<'a> {
@@ -19,6 +22,8 @@ impl<'a> Player<'a> {
             textures,
             last_frame_running: 0,
             to_left: true,
+            is_inventory_open: false,
+            inventory: Inventory::new(27),
         }
     }
 
@@ -129,6 +134,10 @@ impl<'a> Player<'a> {
         }
     }
 
+    pub fn change_inventory_state(&mut self) {
+        self.is_inventory_open = !self.is_inventory_open;
+    }
+
     pub fn draw_on_canvas(&mut self, canvas: &mut Canvas, screen_center: (isize, isize), mut frame: usize) {
         if frame - self.last_frame_running < 6 {
             frame -= frame % 5;
@@ -138,6 +147,40 @@ impl<'a> Player<'a> {
             canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(if self.to_left {&(self.textures.character.1).1} else {&(self.textures.character.1).0}.get_html_element(), x ,0.0, 96.0, 128.0, screen_center.0 as f64 - 32.0, screen_center.1 as f64 - 128.0, 96.0, 128.0).unwrap();
         } else {
             canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element(if self.to_left {&(self.textures.character.0).1} else {&(self.textures.character.0).0}.get_html_element(), screen_center.0 as f64 - 16.0, screen_center.1 as f64 - 128.0).unwrap();
+        }
+
+        if self.is_inventory_open {
+            let context = canvas.get_2d_canvas_rendering_context();
+            let padding = ((screen_center.0 as f64 * 2.0 - 100.0) - 9.0 * 64.0) / 10.0;
+
+            context.begin_path();
+            context.set_fill_style(&JsValue::from_str("rgba(24, 28, 39, 0.5)"));
+            context.fill_rect(
+                50.0,
+                50.0,
+                screen_center.0 as f64 * 2.0 - 100.0,
+                (64.0 + padding) * 3.0 + padding,
+            );
+            context.stroke();
+
+            context.set_fill_style(&JsValue::from_str("rgba(24, 28, 39, 0.2)"));
+            
+            for idx in 0..27 {
+                let x = idx % 9;
+                let y = (idx - x) / 9;
+
+                context.fill_rect(
+                    50.0 + padding + x as f64 * (64.0 + padding),
+                    50.0 + padding + y as f64 * (64.0 + padding),
+                    64.0,
+                    64.0,
+                );
+
+                if let Some((item, quantity)) = self.inventory[idx] {
+                    context.draw_image_with_html_image_element(self.textures.get_for_item(item).get_html_element(), 50.0 + padding + x as f64 * (64.0 + padding), 50.0 + padding + y as f64 * (64.0 + padding)).unwrap();
+                }
+            }
+            context.stroke();
         }
     }
 }

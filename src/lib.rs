@@ -8,7 +8,7 @@ use wasm_game_lib::{
     inputs::{
         event::Event,
         keyboard::{Key, KeyboardEvent},
-        mouse::start_recording_mouse_events,
+        mouse::{start_recording_mouse_events, get_mouse_position, is_mouse_pressed},
     },
 };
 
@@ -18,6 +18,7 @@ macro_rules! log {
     }
 }
 
+mod items;
 mod coords;
 mod loader;
 mod map;
@@ -59,6 +60,7 @@ pub async fn start() -> Result<(), JsValue> {
                         Key::RightArrow => direction_keys.1 = true,
                         Key::DownArrow => direction_keys.2 = true,
                         Key::LeftArrow => direction_keys.3 = true,
+                        Key::E => player.change_inventory_state(),
                         _ => (),
                     },
                     KeyboardEvent::Up(key) => match key {
@@ -71,7 +73,11 @@ pub async fn start() -> Result<(), JsValue> {
                 },
                 _ => (),
             }
-            //log!("{:?}", event);
+        }
+
+        if is_mouse_pressed() {
+            let (x, y) = crate::coords::screen_to_map(get_mouse_position().0 as f64, get_mouse_position().1 as f64, &player, screen_center);
+            map[(x, y)] = crate::map::Block::Air;
         }
 
         player.handle_events(direction_keys, &map, frame);

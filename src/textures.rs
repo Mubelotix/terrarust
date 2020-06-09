@@ -1,4 +1,4 @@
-use crate::loader::load_images;
+use crate::{loader::load_images, items::Item};
 use wasm_game_lib::graphics::{canvas::Canvas, image::Image};
 
 pub struct Textures {
@@ -38,6 +38,12 @@ impl Textures {
             ),
             dirt: t.remove(0),
             tree: t.remove(0),
+        }
+    }
+
+    pub fn get_for_item(&self, item: Item) -> &Image {
+        match item {
+
         }
     }
 }

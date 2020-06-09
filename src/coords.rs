@@ -2,8 +2,14 @@ use crate::{map::Biome, player::Player};
 use std::hash::Hasher;
 use twox_hash::XxHash32;
 
-pub fn _screen_to_map(_x: isize, _y: isize) -> (isize, isize) {
-    todo!();
+pub fn screen_to_map(x: f64, y: f64, player: &Player, screen_center: (isize, isize)) -> (isize, isize) {
+    let a = screen_center.0 as f64 - x;
+    let b = screen_center.1 as f64 - y;
+    let diff_x = a / 16.0;
+    let diff_y = b / 16.0;
+    let x = player.x - diff_x;
+    let y = player.y - diff_y;
+    (x.floor() as isize, y.floor() as isize)
 }
 
 pub fn map_to_screen(

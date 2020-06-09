@@ -151,6 +151,7 @@ pub struct Map<'a> {
     chunks: Vec<Chunk>,
     first_chunk_number: isize,
     textures: &'a Textures,
+    air: Block,
 }
 
 impl<'a> Map<'a> {
@@ -159,6 +160,7 @@ impl<'a> Map<'a> {
             chunks: Vec::new(),
             textures,
             first_chunk_number: -5,
+            air: Block::Air,
         };
         let mut height: f64 = 20.0;
         let mut slope: f64 = 0.2;
@@ -260,5 +262,26 @@ impl<'a> std::ops::Index<(isize, isize)> for Map<'a> {
         }
 
         &Block::Air
+    }
+}
+
+impl<'a> std::ops::IndexMut<(isize, isize)> for Map<'a> {
+    fn index_mut(&mut self, (x, y): (isize, isize)) -> &mut Self::Output {
+        let (chunk, column) = x_to_chunk_and_column(x);
+        let chunk_index = chunk - self.first_chunk_number;
+
+        if y > 0 && chunk_index > 0 {
+            if let Some(chunk) = self.chunks.get_mut(chunk_index as usize) {
+                if let Some(block) = chunk.blocks[column as usize].get_mut(y as usize) {
+                    return block;
+                }
+            }
+        }
+
+        if self.air != Block::Air {
+            self.air = Block::Air;
+        }
+        
+        &mut self.air
     }
 }
