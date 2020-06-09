@@ -194,21 +194,21 @@ impl<'a> Player<'a> {
                 let y = (idx - x) / 9;
 
                 canvas.context.fill_rect(
-                    82.0 + x as f64 * (64.0 + 32.0),
-                    82.0 + y as f64 * (64.0 + 32.0),
+                    104.0 + x as f64 * (64.0 + 40.0),
+                    104.0 + y as f64 * (64.0 + 40.0),
                     64.0,
                     64.0,
                 );
 
                 canvas.context.rect(
-                    82.0 + x as f64 * (64.0 + 32.0),
-                    82.0 + y as f64 * (64.0 + 32.0),
+                    104.0 + x as f64 * (64.0 + 40.0),
+                    104.0 + y as f64 * (64.0 + 40.0),
                     64.0,
                     64.0
                 );
 
                 if let Some((item, _quantity)) = self.inventory[idx] {
-                    canvas.context.draw_image_with_html_image_element(self.textures.get_for_item(item).get_html_element(), 82.0 + x as f64 * (64.0 + 32.0), 82.0 + y as f64 * (64.0 + 32.0)).unwrap();
+                    canvas.context.draw_image_with_html_image_element(self.textures.get_for_item(item).get_html_element(), 104.0 + x as f64 * (64.0 + 40.0), 104.0 + y as f64 * (64.0 + 40.0)).unwrap();
                 }
             }
             canvas.context.stroke();
