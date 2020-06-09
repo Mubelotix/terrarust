@@ -13,6 +13,17 @@ const INVENTORY_BORDER_STYLE: LineStyle = LineStyle {
     },
     size: 3.0,
 };
+const SELECTED_INVENTORY_BORDER_STYLE: LineStyle = LineStyle {
+    cap: LineCap::Square,
+    join: LineJoin::Miter,
+    color: Color {
+        red: 255,
+        green: 255,
+        blue: 255,
+        alpha: 225,
+    },
+    size: 4.0,
+};
 
 pub struct Player<'a> {
     pub x: f64,
@@ -22,6 +33,7 @@ pub struct Player<'a> {
     last_frame_running: usize,
     to_left: bool,
     is_inventory_open: bool,
+    selected_slot: u8,
     pub inventory: Inventory,
 }
 
@@ -36,6 +48,7 @@ impl<'a> Player<'a> {
             to_left: true,
             is_inventory_open: false,
             inventory: Inventory::new(27),
+            selected_slot: 0,
         }
     }
 
@@ -161,34 +174,33 @@ impl<'a> Player<'a> {
             canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element(if self.to_left {&(self.textures.character.0).1} else {&(self.textures.character.0).0}.get_html_element(), screen_center.0 as f64 - 16.0, screen_center.1 as f64 - 128.0).unwrap();
         }
 
-        if self.is_inventory_open {
-            INVENTORY_BORDER_STYLE.apply_on_canvas(&mut canvas);
-            let context = canvas.get_2d_canvas_rendering_context();
+        INVENTORY_BORDER_STYLE.apply_on_canvas(&mut canvas);
+        canvas.context.begin_path();
+        canvas.context.set_fill_style(&JsValue::from_str("rgba(24, 28, 39, 0.9)"));
 
-            context.begin_path();
-            context.set_fill_style(&JsValue::from_str("rgba(24, 28, 39, 0.9)"));
-            context.fill_rect(
+        if self.is_inventory_open {
+            canvas.context.fill_rect(
                 0.0,
                 0.0,
                 screen_center.0 as f64 * 2.0 + 1.0,
                 screen_center.1 as f64 * 2.0 + 1.0,
             );
-            context.stroke();
+            canvas.context.stroke();
 
-            context.set_fill_style(&JsValue::from_str("rgba(255, 255, 255, 0.23)"));
+            canvas.context.set_fill_style(&JsValue::from_str("rgba(255, 255, 255, 0.23)"));
             
             for idx in 0..27 {
                 let x = idx % 9;
                 let y = (idx - x) / 9;
 
-                context.fill_rect(
+                canvas.context.fill_rect(
                     82.0 + x as f64 * (64.0 + 32.0),
                     82.0 + y as f64 * (64.0 + 32.0),
                     64.0,
                     64.0,
                 );
 
-                context.rect(
+                canvas.context.rect(
                     82.0 + x as f64 * (64.0 + 32.0),
                     82.0 + y as f64 * (64.0 + 32.0),
                     64.0,
@@ -196,10 +208,49 @@ impl<'a> Player<'a> {
                 );
 
                 if let Some((item, _quantity)) = self.inventory[idx] {
-                    context.draw_image_with_html_image_element(self.textures.get_for_item(item).get_html_element(), 82.0 + x as f64 * (64.0 + 32.0), 82.0 + y as f64 * (64.0 + 32.0)).unwrap();
+                    canvas.context.draw_image_with_html_image_element(self.textures.get_for_item(item).get_html_element(), 82.0 + x as f64 * (64.0 + 32.0), 82.0 + y as f64 * (64.0 + 32.0)).unwrap();
                 }
             }
-            context.stroke();
+            canvas.context.stroke();
+        } else {
+            canvas.context.fill_rect(
+                screen_center.0 as f64 - 4.5 * 64.0,
+                screen_center.1 as f64 * 2.0 - 64.0,
+                64.0 * 9.0,
+                64.0,
+            );
+
+            canvas.context.set_fill_style(&JsValue::from_str("rgba(255, 255, 255, 0.23)"));
+            
+            for x in 0..9 {
+                canvas.context.fill_rect(
+                    screen_center.0 as f64 - 4.5 * 64.0 + x as f64 * 64.0,
+                    screen_center.1 as f64 * 2.0 - 64.0,
+                    64.0,
+                    64.0,
+                );
+
+                if x == self.selected_slot {
+                    SELECTED_INVENTORY_BORDER_STYLE.apply_on_canvas(&mut canvas);
+                }
+
+                canvas.context.rect(
+                    screen_center.0 as f64 - 4.5 * 64.0 + x as f64 * 64.0,
+                    screen_center.1 as f64 * 2.0 - 64.0,
+                    64.0,
+                    64.0
+                );
+
+                if x == self.selected_slot {
+                    canvas.context.stroke();
+                    INVENTORY_BORDER_STYLE.apply_on_canvas(&mut canvas);
+                }
+
+                if let Some((item, _quantity)) = self.inventory[x as usize] {
+                    canvas.context.draw_image_with_html_image_element(self.textures.get_for_item(item).get_html_element(), screen_center.0 as f64 - 4.5 * 64.0 + x as f64 * 64.0, screen_center.1 as f64 * 2.0 - 64.0).unwrap();
+                }
+            }
+            canvas.context.stroke();
         }
     }
 }
