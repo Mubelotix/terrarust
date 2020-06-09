@@ -227,28 +227,36 @@ impl<'a> Map<'a> {
         player: &Player,
         screen_center: (isize, isize),
     ) {
-        for x in player.x.floor() as isize - 60..player.x.floor() as isize + 60 {
-            for y in player.y.floor() as isize - 35..player.y.floor() as isize + 35 {
-                let (xisize, yisize) =
-                    map_to_screen(x as isize, y as isize, &player, screen_center);
+        let coords = (player.x.floor() as isize - 60, player.y.floor() as isize - 35);
+        let (mut screen_x, mut screen_y) =
+            map_to_screen(coords.0, coords.1, &player, screen_center);
+        screen_x = screen_x.floor();
+        screen_y = screen_y.floor();
+
+        for x in coords.0..coords.0 + 120 {
+            for y in coords.1..coords.1 + 70 {
                 match self[(x, y)] {
                     Block::Air => (),
                     Block::Grass => {
-                        canvas.draw_image(
-                            (xisize, yisize),
-                            match (
-                                self[(x - 1, y)].can_pass_through(),
-                                self[(x + 1, y)].can_pass_through(),
-                            ) {
-                                (false, true) => &self.textures.grass.2,
-                                (true, false) => &self.textures.grass.1,
-                                _ => &self.textures.grass.0[x as usize % 4],
-                            },
-                        );
+                        let mut texture_idx = 0b0000_0000;
+                        if self[(x, y - 1)].can_pass_through() {
+                            texture_idx |= 0b0000_1000;
+                        }
+                        if self[(x + 1, y)].can_pass_through() {
+                            texture_idx |= 0b0000_0100;
+                        }
+                        if self[(x, y + 1)].can_pass_through() {
+                            texture_idx |= 0b0000_0010;
+                        }
+                        if self[(x - 1, y)].can_pass_through() {
+                            texture_idx |= 0b0000_0001;
+                        }
+
+                        canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.grass.get_html_element(), texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, screen_x + (x - coords.0) as f64 * 16.0, screen_y + (y - coords.1) as f64 * 16.0, 16.0, 16.0).unwrap();
                     }
-                    Block::Dirt => canvas.draw_image((xisize, yisize), &self.textures.dirt),
+                    Block::Dirt => canvas.draw_image((screen_x + (x - coords.0) as f64 * 16.0, screen_y + (y - coords.1) as f64 * 16.0), &self.textures.dirt),
                     Block::Tree => {
-                        canvas.draw_image((xisize - 80.0, yisize - 240.0), &self.textures.tree)
+                        canvas.draw_image((screen_x + (x - coords.0) as f64 * 16.0 - 80.0, screen_y + (y - coords.1) as f64 * 16.0 - 240.0), &self.textures.tree)
                     }
                 }
             }
