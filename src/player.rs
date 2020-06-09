@@ -154,7 +154,7 @@ impl<'a> Player<'a> {
             let padding = ((screen_center.0 as f64 * 2.0 - 100.0) - 9.0 * 64.0) / 10.0;
 
             context.begin_path();
-            context.set_fill_style(&JsValue::from_str("rgba(24, 28, 39, 0.5)"));
+            context.set_fill_style(&JsValue::from_str("rgba(24, 28, 39, 0.35)"));
             context.fill_rect(
                 50.0,
                 50.0,
@@ -163,7 +163,7 @@ impl<'a> Player<'a> {
             );
             context.stroke();
 
-            context.set_fill_style(&JsValue::from_str("rgba(24, 28, 39, 0.2)"));
+            context.set_fill_style(&JsValue::from_str("rgba(255, 255, 255, 0.3)"));
             
             for idx in 0..27 {
                 let x = idx % 9;
