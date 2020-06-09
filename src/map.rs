@@ -235,6 +235,9 @@ impl<'a> Map<'a> {
 
         for x in coords.0..coords.0 + 120 {
             for y in coords.1..coords.1 + 70 {
+                let screen_x = screen_x + (x - coords.0) as f64 * 16.0;
+                let screen_y = screen_y + (y - coords.1) as f64 * 16.0;
+
                 match self[(x, y)] {
                     Block::Air => (),
                     Block::Grass => {
@@ -252,11 +255,11 @@ impl<'a> Map<'a> {
                             texture_idx |= 0b0000_0001;
                         }
 
-                        canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.grass.get_html_element(), texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, screen_x + (x - coords.0) as f64 * 16.0, screen_y + (y - coords.1) as f64 * 16.0, 16.0, 16.0).unwrap();
+                        canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.grass.get_html_element(), texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, screen_x, screen_y, 16.0, 16.0).unwrap();
                     }
-                    Block::Dirt => canvas.draw_image((screen_x + (x - coords.0) as f64 * 16.0, screen_y + (y - coords.1) as f64 * 16.0), &self.textures.dirt),
+                    Block::Dirt => canvas.draw_image((screen_x, screen_y), &self.textures.dirt),
                     Block::Tree => {
-                        canvas.draw_image((screen_x + (x - coords.0) as f64 * 16.0 - 80.0, screen_y + (y - coords.1) as f64 * 16.0 - 240.0), &self.textures.tree)
+                        canvas.draw_image((screen_x - 80.0, screen_y - 240.0), &self.textures.tree)
                     }
                 }
             }
