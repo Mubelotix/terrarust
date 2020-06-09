@@ -164,15 +164,14 @@ impl<'a> Player<'a> {
         if self.is_inventory_open {
             INVENTORY_BORDER_STYLE.apply_on_canvas(&mut canvas);
             let context = canvas.get_2d_canvas_rendering_context();
-            let padding = ((screen_center.0 as f64 * 2.0 - 100.0) - 9.0 * 64.0) / 10.0;
 
             context.begin_path();
             context.set_fill_style(&JsValue::from_str("rgba(24, 28, 39, 0.9)"));
             context.fill_rect(
-                50.0,
-                50.0,
-                screen_center.0 as f64 * 2.0 - 100.0,
-                (64.0 + padding) * 3.0 + padding,
+                0.0,
+                0.0,
+                screen_center.0 as f64 * 2.0 + 1.0,
+                screen_center.1 as f64 * 2.0 + 1.0,
             );
             context.stroke();
 
@@ -183,21 +182,21 @@ impl<'a> Player<'a> {
                 let y = (idx - x) / 9;
 
                 context.fill_rect(
-                    50.0 + padding + x as f64 * (64.0 + padding),
-                    50.0 + padding + y as f64 * (64.0 + padding),
+                    82.0 + x as f64 * (64.0 + 32.0),
+                    82.0 + y as f64 * (64.0 + 32.0),
                     64.0,
                     64.0,
                 );
 
                 context.rect(
-                    50.0 + padding + x as f64 * (64.0 + padding),
-                    50.0 + padding + y as f64 * (64.0 + padding),
+                    82.0 + x as f64 * (64.0 + 32.0),
+                    82.0 + y as f64 * (64.0 + 32.0),
                     64.0,
                     64.0
                 );
 
                 if let Some((item, _quantity)) = self.inventory[idx] {
-                    context.draw_image_with_html_image_element(self.textures.get_for_item(item).get_html_element(), 50.0 + padding + x as f64 * (64.0 + padding), 50.0 + padding + y as f64 * (64.0 + padding)).unwrap();
+                    context.draw_image_with_html_image_element(self.textures.get_for_item(item).get_html_element(), 82.0 + x as f64 * (64.0 + 32.0), 82.0 + y as f64 * (64.0 + 32.0)).unwrap();
                 }
             }
             context.stroke();
