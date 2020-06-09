@@ -1,5 +1,5 @@
 use crate::{map::Map, textures::Textures, items::*};
-use wasm_game_lib::{graphics::{canvas::*, color::Color}};
+use wasm_game_lib::{graphics::{canvas::*}};
 use wasm_bindgen::JsValue;
 
 pub struct Player<'a> {
@@ -176,7 +176,7 @@ impl<'a> Player<'a> {
                     64.0,
                 );
 
-                if let Some((item, quantity)) = self.inventory[idx] {
+                if let Some((item, _quantity)) = self.inventory[idx] {
                     context.draw_image_with_html_image_element(self.textures.get_for_item(item).get_html_element(), 50.0 + padding + x as f64 * (64.0 + padding), 50.0 + padding + y as f64 * (64.0 + padding)).unwrap();
                 }
             }
