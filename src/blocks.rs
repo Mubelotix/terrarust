@@ -27,3 +27,9 @@ impl Block {
         }
     }
 }
+
+#[derive(Clone, Copy, PartialEq)]
+pub enum NaturalBackground {
+    Sky,
+    Dirt,
+}

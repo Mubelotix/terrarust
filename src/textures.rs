@@ -11,6 +11,7 @@ pub struct Textures {
     pub item_log: Image,
     pub item_wood_stick: Image,
     pub item_foliage: Image,
+    pub background_dirt: Image,
 }
 
 impl Textures {
@@ -23,6 +24,7 @@ impl Textures {
                 "ressources/character/running2.png",
                 "ressources/blocks/grass.png",
                 "ressources/blocks/dirt.png",
+                "ressources/backgrounds/dirt.png",
                 "ressources/tree.png",
                 "ressources/items/log.png",
                 "ressources/items/wood_stick.png",
@@ -36,6 +38,7 @@ impl Textures {
             character: ((t.remove(0), t.remove(0)), (t.remove(0), t.remove(0))),
             grass: t.remove(0),
             dirt: t.remove(0),
+            background_dirt: t.remove(0),
             tree: t.remove(0),
             item_log: t.remove(0),
             item_wood_stick: t.remove(0),
@@ -51,4 +54,21 @@ impl Textures {
             Item::Foliage => &self.item_foliage,
         }
     }
+}
+
+pub fn get_texture_idx(borders: (bool, bool, bool, bool)) -> usize {
+    let mut texture_idx = 0b0000_0000;
+    if borders.0 {
+        texture_idx |= 0b0000_1000;
+    }
+    if borders.1 {
+        texture_idx |= 0b0000_0100;
+    }
+    if borders.2 {
+        texture_idx |= 0b0000_0010;
+    }
+    if borders.3 {
+        texture_idx |= 0b0000_0001;
+    }
+    texture_idx
 }
