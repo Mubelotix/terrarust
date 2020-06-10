@@ -1,4 +1,4 @@
-use crate::map::Block;
+use crate::blocks::Block;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum Item {

@@ -19,7 +19,9 @@ mod map;
 mod player;
 mod progress_bar;
 mod textures;
-use map::{Map, Block};
+mod blocks;
+use blocks::Block;
+use map::Map;
 use player::Player;
 use textures::Textures;
 
@@ -87,7 +89,7 @@ pub async fn start() -> Result<(), JsValue> {
                     player.inventory.push(item);
                 }
             }
-            map[(x, y)] = crate::map::Block::Air;
+            map[(x, y)] = Block::Air;
         }
 
         if is_pressed(Button::Secondary) {

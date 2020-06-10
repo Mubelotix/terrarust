@@ -2,40 +2,12 @@ use crate::{
     coords::{map_to_screen, x_to_biome, x_to_chunk, x_to_chunk_and_column},
     player::Player,
     textures::Textures,
-    items::Item,
+    blocks::Block,
 };
 use arr_macro::arr;
 use std::hash::Hasher;
 use twox_hash::XxHash32;
 use wasm_game_lib::{graphics::canvas::Canvas, log};
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum Block {
-    Grass,
-    Air,
-    Dirt,
-    Tree,
-}
-
-impl Block {
-    pub fn can_pass_through(self) -> bool {
-        match self {
-            Block::Grass => false,
-            Block::Dirt => false,
-            Block::Air => true,
-            Block::Tree => true,
-        }
-    }
-
-    pub fn as_item(&self) -> Vec<Item> {
-        match self {
-            Block::Grass => vec![Item::Dirt],
-            Block::Dirt => vec![Item::Dirt],
-            Block::Air => vec![],
-            Block::Tree => vec![Item::Log, Item::WoodStick, Item::Foliage],
-        }
-    }
-}
 
 #[derive(Debug)]
 pub enum Biome {
