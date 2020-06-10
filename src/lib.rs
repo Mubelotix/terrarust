@@ -10,8 +10,6 @@ use wasm_game_lib::{
         keyboard::{Key, KeyboardEvent},
         mouse::{start_recording_mouse_events, get_mouse_position, is_pressed, Button, MouseEvent},
     },
-    log,
-    elog
 };
 
 mod items;
