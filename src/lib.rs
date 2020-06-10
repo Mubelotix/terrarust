@@ -20,7 +20,7 @@ mod player;
 mod progress_bar;
 mod textures;
 mod blocks;
-use blocks::Block;
+use blocks::{Block, BlockType};
 use map::Map;
 use player::Player;
 use textures::Textures;
@@ -83,18 +83,18 @@ pub async fn start() -> Result<(), JsValue> {
 
         if is_pressed(Button::Main) {
             let (x, y) = crate::coords::screen_to_map(get_mouse_position().0 as f64, get_mouse_position().1 as f64, &player, screen_center);
-            if map[(x, y)] != Block::Air {
+            if map[(x, y)].block_type != BlockType::Air {
                 let items = map[(x, y)].as_item();
                 for item in items {
                     player.inventory.push(item);
                 }
             }
-            map[(x, y)] = Block::Air;
+            map[(x, y)].block_type = BlockType::Air;
         }
 
         if is_pressed(Button::Secondary) {
             let (x, y) = crate::coords::screen_to_map(get_mouse_position().0 as f64, get_mouse_position().1 as f64, &player, screen_center);
-            if map[(x, y)] == Block::Air {
+            if map[(x, y)].block_type == BlockType::Air {
                 if let Some((item, quantity)) = &mut player.inventory[player.selected_slot as usize] {
                     if *quantity > 0 {
                         if let Some(block) = item.as_block() {
@@ -102,7 +102,7 @@ pub async fn start() -> Result<(), JsValue> {
                             if *quantity == 0 {
                                 player.inventory[player.selected_slot as usize] = None;
                             }
-                            map[(x, y)] = block;
+                            map[(x, y)].block_type = block;
                         }
                     }
                 }

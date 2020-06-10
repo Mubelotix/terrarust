@@ -2,7 +2,7 @@ use crate::{
     coords::{map_to_screen, x_to_biome, x_to_chunk, x_to_chunk_and_column},
     player::Player,
     textures::{Textures, get_texture_idx},
-    blocks::{Block, NaturalBackground},
+    blocks::{Block, BlockType, NaturalBackground},
 };
 use arr_macro::arr;
 use std::hash::Hasher;
@@ -51,7 +51,7 @@ impl Biome {
 }
 
 pub struct Chunk {
-    blocks: [[(Block, NaturalBackground); 2048]; 32],
+    blocks: [[Block; 2048]; 32],
     pub left_config: (f64, f64),  // (height, slope)
     pub right_config: (f64, f64), // idem
 }
@@ -98,13 +98,13 @@ impl Chunk {
                 x -= 1;
             }
             
-            let mut column = [(Block::Dirt, NaturalBackground::Dirt); 2048];
+            let mut column = [Block::new(BlockType::Dirt, NaturalBackground::Dirt); 2048];
             for y in 0..height.floor() as usize {
-                column[y] = (Block::Air, NaturalBackground::Sky);
+                column[y] = Block::new(BlockType::Air, NaturalBackground::Sky);
             }
-            column[height.floor() as usize] = (Block::Grass, NaturalBackground::Dirt);
+            column[height.floor() as usize] = Block::new(BlockType::Grass, NaturalBackground::Dirt);
             if tree && height.floor() as usize > 0 {
-                column[height.floor() as usize - 1] = (Block::Tree, NaturalBackground::Sky);
+                column[height.floor() as usize - 1] = Block::new(BlockType::Tree, NaturalBackground::Sky);
             }
             column
         };32);
@@ -133,7 +133,7 @@ pub struct Map<'a> {
     chunks: Vec<Chunk>,
     first_chunk_number: isize,
     textures: &'a Textures,
-    air: (Block, NaturalBackground),
+    air: Block,
 }
 
 impl<'a> Map<'a> {
@@ -142,7 +142,7 @@ impl<'a> Map<'a> {
             chunks: Vec::new(),
             textures,
             first_chunk_number: -5,
-            air: (Block::Air, NaturalBackground::Sky),
+            air: Block::new(BlockType::Air, NaturalBackground::Sky),
         };
         let mut height: f64 = 20.0;
         let mut slope: f64 = 0.2;
@@ -209,7 +209,7 @@ impl<'a> Map<'a> {
             for y in coords.1..coords.1 + 70 {
                 let screen_x = screen_x + (x - coords.0) as f64 * 16.0;
                 let screen_y = screen_y + (y - coords.1) as f64 * 16.0;
-                let (block, natural_background) = self.index_all((x, y));
+                let block = &self[(x, y)];
                 let block_texture_idx = get_texture_idx((
                     self[(x, y - 1)].can_pass_through(),
                     self[(x + 1, y)].can_pass_through(),
@@ -217,33 +217,37 @@ impl<'a> Map<'a> {
                     self[(x - 1, y)].can_pass_through()
                 ));
 
-                if *natural_background == NaturalBackground::Dirt && (*block == Block::Air || block_texture_idx != 0) {
+                if block.natural_background == NaturalBackground::Dirt && (block.block_type == BlockType::Air || block_texture_idx != 0) {
                     let texture_idx = get_texture_idx((
-                        self.index_all((x, y - 1)).1 == NaturalBackground::Sky,
-                        self.index_all((x + 1, y)).1 == NaturalBackground::Sky,
-                        self.index_all((x, y + 1)).1 == NaturalBackground::Sky,
-                        self.index_all((x - 1, y)).1 == NaturalBackground::Sky,
+                        self[(x, y - 1)].natural_background == NaturalBackground::Sky,
+                        self[(x + 1, y)].natural_background == NaturalBackground::Sky,
+                        self[(x, y + 1)].natural_background == NaturalBackground::Sky,
+                        self[(x - 1, y)].natural_background == NaturalBackground::Sky,
                     ));
                     canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.background_dirt.get_html_element(), texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, screen_x, screen_y, 16.0, 16.0).unwrap();
                 }
 
-                match block {
-                    Block::Air => (),
-                    Block::Grass => {
+                match block.block_type {
+                    BlockType::Air => (),
+                    BlockType::Grass => {
                         canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.grass.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, screen_x, screen_y, 16.0, 16.0).unwrap();
                     }
-                    Block::Dirt => {
+                    BlockType::Dirt => {
                         canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.dirt.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, screen_x, screen_y, 16.0, 16.0).unwrap();
                     },
-                    Block::Tree => {
+                    BlockType::Tree => {
                         canvas.draw_image((screen_x - 80.0, screen_y - 240.0), &self.textures.tree)
                     }
                 }
             }
         }
     }
+}
 
-    pub fn index_all(&self, (x, y): (isize, isize)) -> &(Block, NaturalBackground) { 
+impl<'a> std::ops::Index<(isize, isize)> for Map<'a> {
+    type Output = Block;
+
+    fn index(&self, (x, y): (isize, isize)) -> &Self::Output {
         let (chunk, column) = x_to_chunk_and_column(x);
         let chunk_index = chunk - self.first_chunk_number;
 
@@ -255,10 +259,15 @@ impl<'a> Map<'a> {
             }
         }
 
-        &(Block::Air, NaturalBackground::Sky)
+        & Block {
+            block_type: BlockType::Air,
+            natural_background: NaturalBackground::Sky,
+        }
     }
+}
 
-    pub fn index_all_mut(&mut self, (x, y): (isize, isize)) -> &mut (Block, NaturalBackground) { 
+impl<'a> std::ops::IndexMut<(isize, isize)> for Map<'a> {
+    fn index_mut(&mut self, (x, y): (isize, isize)) -> &mut Self::Output {
         let (chunk, column) = x_to_chunk_and_column(x);
         let chunk_index = chunk - self.first_chunk_number;
 
@@ -270,24 +279,10 @@ impl<'a> Map<'a> {
             }
         }
 
-        if self.air != (Block::Air, NaturalBackground::Sky) {
-            self.air = (Block::Air, NaturalBackground::Sky);
+        if self.air != Block::new(BlockType::Air, NaturalBackground::Sky) {
+            self.air = Block::new(BlockType::Air, NaturalBackground::Sky);
         }
 
         &mut self.air
-    }
-}
-
-impl<'a> std::ops::Index<(isize, isize)> for Map<'a> {
-    type Output = Block;
-
-    fn index(&self, (x, y): (isize, isize)) -> &Self::Output {
-        &self.index_all((x, y)).0
-    }
-}
-
-impl<'a> std::ops::IndexMut<(isize, isize)> for Map<'a> {
-    fn index_mut(&mut self, (x, y): (isize, isize)) -> &mut Self::Output {
-        &mut self.index_all_mut((x, y)).0
     }
 }

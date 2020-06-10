@@ -1,4 +1,4 @@
-use crate::blocks::Block;
+use crate::blocks::BlockType;
 
 #[derive(Copy, Clone, PartialEq)]
 pub enum Item {
@@ -9,9 +9,9 @@ pub enum Item {
 }
 
 impl Item {
-    pub fn as_block(&self) -> Option<Block> {
+    pub fn as_block(&self) -> Option<BlockType> {
         match self {
-            Item::Dirt => Some(Block::Dirt),
+            Item::Dirt => Some(BlockType::Dirt),
             _ => None,
         }
     }
