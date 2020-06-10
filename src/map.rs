@@ -257,7 +257,23 @@ impl<'a> Map<'a> {
 
                         canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.grass.get_html_element(), texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, screen_x, screen_y, 16.0, 16.0).unwrap();
                     }
-                    Block::Dirt => canvas.draw_image((screen_x, screen_y), &self.textures.dirt),
+                    Block::Dirt => {
+                        let mut texture_idx = 0b0000_0000;
+                        if self[(x, y - 1)].can_pass_through() {
+                            texture_idx |= 0b0000_1000;
+                        }
+                        if self[(x + 1, y)].can_pass_through() {
+                            texture_idx |= 0b0000_0100;
+                        }
+                        if self[(x, y + 1)].can_pass_through() {
+                            texture_idx |= 0b0000_0010;
+                        }
+                        if self[(x - 1, y)].can_pass_through() {
+                            texture_idx |= 0b0000_0001;
+                        }
+
+                        canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.dirt.get_html_element(), texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, screen_x, screen_y, 16.0, 16.0).unwrap();
+                    },
                     Block::Tree => {
                         canvas.draw_image((screen_x - 80.0, screen_y - 240.0), &self.textures.tree)
                     }
