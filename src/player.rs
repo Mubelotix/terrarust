@@ -171,7 +171,7 @@ impl<'a> Player<'a> {
             let x = frame as f64 * 96.0;
             canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(if self.to_left {&(self.textures.character.1).1} else {&(self.textures.character.1).0}.get_html_element(), x ,0.0, 96.0, 128.0, screen_center.0 as f64 - 32.0, screen_center.1 as f64 - 128.0, 96.0, 128.0).unwrap();
         } else {
-            canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element(if self.to_left {&(self.textures.character.0).1} else {&(self.textures.character.0).0}.get_html_element(), screen_center.0 as f64 - 16.0, screen_center.1 as f64 - 128.0).unwrap();
+            canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element(if self.to_left {&(self.textures.character.0).1} else {&(self.textures.character.0).0}.get_html_element(), screen_center.0 as f64 - 32.0, screen_center.1 as f64 - 128.0).unwrap();
         }
 
         INVENTORY_BORDER_STYLE.apply_on_canvas(&mut canvas);
