@@ -20,7 +20,7 @@ mod player;
 mod progress_bar;
 mod textures;
 mod blocks;
-use blocks::{Block, BlockType};
+use blocks::BlockType;
 use map::Map;
 use player::Player;
 use textures::Textures;
