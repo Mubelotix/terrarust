@@ -54,12 +54,12 @@ impl<'a> Player<'a> {
 
     pub fn is_touching_the_surface(&self, map: &Map) -> bool {
         !map[(self.x.floor() as isize, (self.y + 0.03).floor() as isize)].can_pass_through()
-            || !map[(self.x.ceil() as isize, (self.y + 0.03).floor() as isize)].can_pass_through()
+            || !map[(self.x.floor() as isize + 1, (self.y + 0.03).floor() as isize)].can_pass_through()
     }
 
     pub fn is_under_the_surface(&self, map: &Map) -> bool {
         !map[(self.x.floor() as isize, self.y.floor() as isize)].can_pass_through()
-            || !map[(self.x.ceil() as isize, self.y.floor() as isize)].can_pass_through()
+            || !map[(self.x.floor() as isize + 1, self.y.floor() as isize)].can_pass_through()
     }
 
     pub fn can_move_right_by(&self, distance: f64, map: &Map) -> bool {
