@@ -1,9 +1,20 @@
+use crate::map::Block;
+
 #[derive(Copy, Clone, PartialEq)]
 pub enum Item {
     Dirt,
     Log,
     WoodStick,
     Foliage,
+}
+
+impl Item {
+    pub fn as_block(&self) -> Option<Block> {
+        match self {
+            Item::Dirt => Some(Block::Dirt),
+            _ => None,
+        }
+    }
 }
 
 pub struct Inventory {
@@ -46,6 +57,12 @@ impl std::ops::Index<usize> for Inventory {
     type Output = Option<(Item, usize)>;
 
     fn index(&self, idx: usize) -> &Self::Output {
-        self.slots.get(idx).unwrap_or(&None)
+        self.slots.get(idx).unwrap()
+    }
+}
+
+impl std::ops::IndexMut<usize> for Inventory {
+    fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
+        self.slots.get_mut(idx).unwrap()
     }
 }

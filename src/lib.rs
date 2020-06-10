@@ -92,6 +92,23 @@ pub async fn start() -> Result<(), JsValue> {
             map[(x, y)] = crate::map::Block::Air;
         }
 
+        if is_pressed(Button::Secondary) {
+            let (x, y) = crate::coords::screen_to_map(get_mouse_position().0 as f64, get_mouse_position().1 as f64, &player, screen_center);
+            if map[(x, y)] == Block::Air {
+                if let Some((item, quantity)) = &mut player.inventory[player.selected_slot as usize] {
+                    if *quantity > 0 {
+                        if let Some(block) = item.as_block() {
+                            *quantity -= 1;
+                            if *quantity == 0 {
+                                player.inventory[player.selected_slot as usize] = None;
+                            }
+                            map[(x, y)] = block;
+                        }
+                    }
+                }
+            }
+        }
+
         player.handle_events(direction_keys, &map, frame);
         map.update_chunks(&player);
 
