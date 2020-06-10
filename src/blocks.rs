@@ -1,6 +1,6 @@
 use crate::items::Item;
 
-#[derive(PartialEq, Clone, Copy)]
+#[derive(PartialEq, Clone, Copy, Debug)]
 pub struct Block {
     pub block_type: BlockType,
     pub natural_background: NaturalBackground,
@@ -51,7 +51,7 @@ impl BlockType {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum NaturalBackground {
     Sky,
     Dirt,
