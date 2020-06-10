@@ -5,7 +5,7 @@ use crate::{
     blocks::{Block, BlockType, NaturalBackground},
 };
 use arr_macro::arr;
-use std::hash::Hasher;
+use std::{hash::Hasher, rc::Rc};
 use twox_hash::XxHash32;
 use wasm_game_lib::{graphics::canvas::Canvas, log};
 
@@ -129,15 +129,15 @@ impl Chunk {
     }
 }
 
-pub struct Map<'a> {
+pub struct Map {
     chunks: Vec<Chunk>,
     first_chunk_number: isize,
-    textures: &'a Textures,
+    textures: Rc<Textures>,
     air: Block,
 }
 
-impl<'a> Map<'a> {
-    pub fn new(textures: &Textures) -> Map {
+impl Map {
+    pub fn new(textures: Rc<Textures>) -> Map {
         let mut map = Map {
             chunks: Vec::new(),
             textures,
@@ -192,7 +192,7 @@ impl<'a> Map<'a> {
     }
 }
 
-impl<'a> Map<'a> {
+impl Map {
     pub fn draw_on_canvas(
         &self,
         canvas: &mut Canvas,
@@ -244,7 +244,7 @@ impl<'a> Map<'a> {
     }
 }
 
-impl<'a> std::ops::Index<(isize, isize)> for Map<'a> {
+impl std::ops::Index<(isize, isize)> for Map {
     type Output = Block;
 
     fn index(&self, (x, y): (isize, isize)) -> &Self::Output {
@@ -266,7 +266,7 @@ impl<'a> std::ops::Index<(isize, isize)> for Map<'a> {
     }
 }
 
-impl<'a> std::ops::IndexMut<(isize, isize)> for Map<'a> {
+impl std::ops::IndexMut<(isize, isize)> for Map {
     fn index_mut(&mut self, (x, y): (isize, isize)) -> &mut Self::Output {
         let (chunk, column) = x_to_chunk_and_column(x);
         let chunk_index = chunk - self.first_chunk_number;

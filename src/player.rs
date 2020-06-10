@@ -1,6 +1,7 @@
 use crate::{map::Map, textures::Textures, items::*};
 use wasm_game_lib::{graphics::{canvas::*, color::Color}};
 use wasm_bindgen::JsValue;
+use std::rc::Rc;
 
 const INVENTORY_BORDER_STYLE: LineStyle = LineStyle {
     cap: LineCap::Square,
@@ -25,11 +26,11 @@ const SELECTED_INVENTORY_BORDER_STYLE: LineStyle = LineStyle {
     size: 4.0,
 };
 
-pub struct Player<'a> {
+pub struct Player {
     pub x: f64,
     pub y: f64,
     speed_y: f64,
-    textures: &'a Textures,
+    textures: Rc<Textures>,
     last_frame_running: usize,
     to_left: bool,
     is_inventory_open: bool,
@@ -37,8 +38,8 @@ pub struct Player<'a> {
     pub inventory: Inventory,
 }
 
-impl<'a> Player<'a> {
-    pub fn new(textures: &Textures) -> Player {
+impl Player {
+    pub fn new(textures: Rc<Textures>) -> Player {
         Player {
             x: 3.0,
             y: -10.0,

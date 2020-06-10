@@ -1,8 +1,6 @@
 use console_error_panic_hook::set_once;
-use std::time::Duration;
-use wasm_bindgen::prelude::*;
+use wasm_bindgen::{prelude::*, JsCast};
 use wasm_game_lib::inputs::event::types::*;
-use wasm_game_lib::system::sleep;
 use wasm_game_lib::{
     graphics::{color::Color, window::Window},
     inputs::{
@@ -11,6 +9,7 @@ use wasm_game_lib::{
         mouse::{start_recording_mouse_events, get_mouse_position, is_pressed, Button, MouseEvent},
     },
 };
+use std::{rc::Rc, cell::RefCell};
 
 mod items;
 mod coords;
@@ -25,29 +24,40 @@ use map::Map;
 use player::Player;
 use textures::Textures;
 
+fn request_animation_frame(f: &Closure<dyn FnMut()>) {
+    web_sys::window().unwrap()
+        .request_animation_frame(f.as_ref().unchecked_ref())
+        .expect("should register `requestAnimationFrame` OK");
+}
+
 #[wasm_bindgen(start)]
-pub async fn start() -> Result<(), JsValue> {
+pub async fn start() {
     set_once();
     start_recording_mouse_events();
 
-    let (mut window, mut canvas) =
+    let (window, mut canvas) =
         Window::init_with_events(KEYBOARD_EVENT + MOUSE_EVENT);
+    let window = Rc::new(RefCell::new(window));
 
     let screen_center = (
         canvas.get_width() as isize / 2,
         canvas.get_height() as isize / 2,
     );
 
-    let textures = Textures::load(&mut canvas).await;
+    let textures = Rc::new(Textures::load(&mut canvas).await);
 
-    let mut map = Map::new(&textures);
-    let mut player = Player::new(&textures);
+    let mut map = Map::new(Rc::clone(&textures));
+    let mut player = Player::new(Rc::clone(&textures));
     let mut frame = 0;
 
     let mut direction_keys = (false, false, false, false);
 
-    loop {
-        for event in window.poll_events() {
+    let f = Rc::new(RefCell::new(None));
+    let g = f.clone();
+
+    let window2 = Rc::clone(&window);
+    *g.borrow_mut() = Some(Closure::wrap(Box::new(move || {
+        for event in window.borrow_mut().poll_events() {
             #[allow(clippy::single_match)]
             match event {
                 Event::KeyboardEvent(event) => match event {
@@ -116,7 +126,10 @@ pub async fn start() -> Result<(), JsValue> {
         map.draw_on_canvas(&mut canvas, &player, screen_center);
         player.draw_on_canvas(&mut canvas, screen_center, frame);
 
-        sleep(Duration::from_millis(16)).await;
         frame += 1;
-    }
+
+        request_animation_frame(f.borrow().as_ref().unwrap());
+    }) as Box<dyn FnMut()>));
+    request_animation_frame(g.borrow().as_ref().unwrap());
+    window2.borrow().window.request_animation_frame(g.borrow().as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
 }
