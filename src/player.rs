@@ -63,13 +63,13 @@ impl<'a> Player<'a> {
     }
 
     pub fn can_move_right_by(&self, distance: f64, map: &Map) -> bool {
-        map[((self.x + distance).ceil() as isize, self.y.floor() as isize)].can_pass_through()
-            && map[((self.x + distance).ceil() as isize, self.y.floor() as isize - 1)].can_pass_through()
-            && map[((self.x + distance).ceil() as isize, self.y.floor() as isize - 2)].can_pass_through()
-            && map[((self.x + distance).ceil() as isize, self.y.floor() as isize - 3)].can_pass_through()
-            && map[((self.x + distance).ceil() as isize, self.y.floor() as isize - 4)].can_pass_through()
-            && map[((self.x + distance).ceil() as isize, self.y.floor() as isize - 5)].can_pass_through()
-            && map[((self.x + distance).ceil() as isize, self.y.floor() as isize - 6)].can_pass_through()
+        map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize)].can_pass_through()
+            && map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize - 1)].can_pass_through()
+            && map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize - 2)].can_pass_through()
+            && map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize - 3)].can_pass_through()
+            && map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize - 4)].can_pass_through()
+            && map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize - 5)].can_pass_through()
+            && map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize - 6)].can_pass_through()
     }
 
     pub fn can_move_left_by(&self, distance: f64, map: &Map) -> bool {
@@ -95,7 +95,7 @@ impl<'a> Player<'a> {
         )]
             .can_pass_through()
             && map[(
-                self.x.ceil() as isize,
+                self.x.floor() as isize + 1,
                 (self.y + distance).floor() as isize - 7,
             )]
                 .can_pass_through()
