@@ -10,7 +10,7 @@ impl Block {
     pub const fn new(block_type: BlockType, natural_background: NaturalBackground) -> Block {
         Block {
             block_type,
-            natural_background
+            natural_background,
         }
     }
 

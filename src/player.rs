@@ -1,7 +1,7 @@
-use crate::{map::Map, textures::Textures, items::*};
-use wasm_game_lib::{graphics::{canvas::*, color::Color}};
-use wasm_bindgen::JsValue;
+use crate::{items::*, map::Map, textures::Textures};
 use std::rc::Rc;
+use wasm_bindgen::JsValue;
+use wasm_game_lib::graphics::{canvas::*, color::Color};
 
 const INVENTORY_BORDER_STYLE: LineStyle = LineStyle {
     cap: LineCap::Square,
@@ -55,7 +55,11 @@ impl Player {
 
     pub fn is_touching_the_surface(&self, map: &Map) -> bool {
         !map[(self.x.floor() as isize, (self.y + 0.03).floor() as isize)].can_pass_through()
-            || !map[(self.x.floor() as isize + 1, (self.y + 0.03).floor() as isize)].can_pass_through()
+            || !map[(
+                self.x.floor() as isize + 1,
+                (self.y + 0.03).floor() as isize,
+            )]
+                .can_pass_through()
     }
 
     pub fn is_under_the_surface(&self, map: &Map) -> bool {
@@ -64,28 +68,78 @@ impl Player {
     }
 
     pub fn can_move_right_by(&self, distance: f64, map: &Map) -> bool {
-        map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize)].can_pass_through()
-            && map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize - 1)].can_pass_through()
-            && map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize - 2)].can_pass_through()
-            && map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize - 3)].can_pass_through()
-            && map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize - 4)].can_pass_through()
-            && map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize - 5)].can_pass_through()
-            && map[((self.x + distance).floor() as isize + 1, self.y.floor() as isize - 6)].can_pass_through()
+        map[(
+            (self.x + distance).floor() as isize + 1,
+            self.y.floor() as isize,
+        )]
+            .can_pass_through()
+            && map[(
+                (self.x + distance).floor() as isize + 1,
+                self.y.floor() as isize - 1,
+            )]
+                .can_pass_through()
+            && map[(
+                (self.x + distance).floor() as isize + 1,
+                self.y.floor() as isize - 2,
+            )]
+                .can_pass_through()
+            && map[(
+                (self.x + distance).floor() as isize + 1,
+                self.y.floor() as isize - 3,
+            )]
+                .can_pass_through()
+            && map[(
+                (self.x + distance).floor() as isize + 1,
+                self.y.floor() as isize - 4,
+            )]
+                .can_pass_through()
+            && map[(
+                (self.x + distance).floor() as isize + 1,
+                self.y.floor() as isize - 5,
+            )]
+                .can_pass_through()
+            && map[(
+                (self.x + distance).floor() as isize + 1,
+                self.y.floor() as isize - 6,
+            )]
+                .can_pass_through()
     }
 
     pub fn can_move_left_by(&self, distance: f64, map: &Map) -> bool {
-        map[((self.x - distance).floor() as isize, self.y.floor() as isize)].can_pass_through()
-            && map[((self.x - distance).floor() as isize, self.y.floor() as isize - 1)]
+        map[(
+            (self.x - distance).floor() as isize,
+            self.y.floor() as isize,
+        )]
+            .can_pass_through()
+            && map[(
+                (self.x - distance).floor() as isize,
+                self.y.floor() as isize - 1,
+            )]
                 .can_pass_through()
-            && map[((self.x - distance).floor() as isize, self.y.floor() as isize - 2)]
+            && map[(
+                (self.x - distance).floor() as isize,
+                self.y.floor() as isize - 2,
+            )]
                 .can_pass_through()
-            && map[((self.x - distance).floor() as isize, self.y.floor() as isize - 3)]
+            && map[(
+                (self.x - distance).floor() as isize,
+                self.y.floor() as isize - 3,
+            )]
                 .can_pass_through()
-            && map[((self.x - distance).floor() as isize, self.y.floor() as isize - 4)]
+            && map[(
+                (self.x - distance).floor() as isize,
+                self.y.floor() as isize - 4,
+            )]
                 .can_pass_through()
-            && map[((self.x - distance).floor() as isize, self.y.floor() as isize - 5)]
+            && map[(
+                (self.x - distance).floor() as isize,
+                self.y.floor() as isize - 5,
+            )]
                 .can_pass_through()
-            && map[((self.x - distance).floor() as isize, self.y.floor() as isize - 6)]
+            && map[(
+                (self.x - distance).floor() as isize,
+                self.y.floor() as isize - 6,
+            )]
                 .can_pass_through()
     }
 
@@ -164,20 +218,57 @@ impl Player {
         self.is_inventory_open = !self.is_inventory_open;
     }
 
-    pub fn draw_on_canvas(&mut self, mut canvas: &mut Canvas, screen_center: (isize, isize), mut frame: usize) {
+    pub fn draw_on_canvas(
+        &mut self,
+        mut canvas: &mut Canvas,
+        screen_center: (isize, isize),
+        mut frame: usize,
+    ) {
         if frame - self.last_frame_running < 6 {
             frame -= frame % 5;
             frame /= 5;
             frame %= 8;
             let x = frame as f64 * 96.0;
-            canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(if self.to_left {&(self.textures.character.1).1} else {&(self.textures.character.1).0}.get_html_element(), x ,0.0, 96.0, 128.0, screen_center.0 as f64 - 32.0, screen_center.1 as f64 - 128.0, 96.0, 128.0).unwrap();
+            canvas
+                .get_2d_canvas_rendering_context()
+                .draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(
+                    if self.to_left {
+                        &(self.textures.character.1).1
+                    } else {
+                        &(self.textures.character.1).0
+                    }
+                    .get_html_element(),
+                    x,
+                    0.0,
+                    96.0,
+                    128.0,
+                    screen_center.0 as f64 - 32.0,
+                    screen_center.1 as f64 - 128.0,
+                    96.0,
+                    128.0,
+                )
+                .unwrap();
         } else {
-            canvas.get_2d_canvas_rendering_context().draw_image_with_html_image_element(if self.to_left {&(self.textures.character.0).1} else {&(self.textures.character.0).0}.get_html_element(), screen_center.0 as f64 - 32.0, screen_center.1 as f64 - 128.0).unwrap();
+            canvas
+                .get_2d_canvas_rendering_context()
+                .draw_image_with_html_image_element(
+                    if self.to_left {
+                        &(self.textures.character.0).1
+                    } else {
+                        &(self.textures.character.0).0
+                    }
+                    .get_html_element(),
+                    screen_center.0 as f64 - 32.0,
+                    screen_center.1 as f64 - 128.0,
+                )
+                .unwrap();
         }
 
         INVENTORY_BORDER_STYLE.apply_on_canvas(&mut canvas);
         canvas.context.begin_path();
-        canvas.context.set_fill_style(&JsValue::from_str("rgba(24, 28, 39, 0.9)"));
+        canvas
+            .context
+            .set_fill_style(&JsValue::from_str("rgba(24, 28, 39, 0.9)"));
 
         if self.is_inventory_open {
             canvas.context.fill_rect(
@@ -188,8 +279,10 @@ impl Player {
             );
             canvas.context.stroke();
 
-            canvas.context.set_fill_style(&JsValue::from_str("rgba(255, 255, 255, 0.23)"));
-            
+            canvas
+                .context
+                .set_fill_style(&JsValue::from_str("rgba(255, 255, 255, 0.23)"));
+
             for idx in 0..27 {
                 let x = idx % 9;
                 let y = (idx - x) / 9;
@@ -205,11 +298,18 @@ impl Player {
                     104.0 + x as f64 * (64.0 + 40.0),
                     104.0 + y as f64 * (64.0 + 40.0),
                     64.0,
-                    64.0
+                    64.0,
                 );
 
                 if let Some((item, _quantity)) = self.inventory[idx] {
-                    canvas.context.draw_image_with_html_image_element(self.textures.get_for_item(item).get_html_element(), 104.0 + x as f64 * (64.0 + 40.0), 104.0 + y as f64 * (64.0 + 40.0)).unwrap();
+                    canvas
+                        .context
+                        .draw_image_with_html_image_element(
+                            self.textures.get_for_item(item).get_html_element(),
+                            104.0 + x as f64 * (64.0 + 40.0),
+                            104.0 + y as f64 * (64.0 + 40.0),
+                        )
+                        .unwrap();
                 }
             }
             canvas.context.stroke();
@@ -221,8 +321,10 @@ impl Player {
                 64.0,
             );
 
-            canvas.context.set_fill_style(&JsValue::from_str("rgba(255, 255, 255, 0.23)"));
-            
+            canvas
+                .context
+                .set_fill_style(&JsValue::from_str("rgba(255, 255, 255, 0.23)"));
+
             for x in 0..9 {
                 canvas.context.fill_rect(
                     screen_center.0 as f64 - 4.5 * 64.0 + x as f64 * 64.0,
@@ -235,11 +337,18 @@ impl Player {
                     screen_center.0 as f64 - 4.5 * 64.0 + x as f64 * 64.0,
                     screen_center.1 as f64 * 2.0 - 64.0,
                     64.0,
-                    64.0
+                    64.0,
                 );
 
                 if let Some((item, _quantity)) = self.inventory[x as usize] {
-                    canvas.context.draw_image_with_html_image_element(self.textures.get_for_item(item).get_html_element(), screen_center.0 as f64 - 4.5 * 64.0 + x as f64 * 64.0, screen_center.1 as f64 * 2.0 - 64.0).unwrap();
+                    canvas
+                        .context
+                        .draw_image_with_html_image_element(
+                            self.textures.get_for_item(item).get_html_element(),
+                            screen_center.0 as f64 - 4.5 * 64.0 + x as f64 * 64.0,
+                            screen_center.1 as f64 * 2.0 - 64.0,
+                        )
+                        .unwrap();
                 }
             }
             canvas.context.stroke();
@@ -250,7 +359,7 @@ impl Player {
                 screen_center.0 as f64 - 4.5 * 64.0 + self.selected_slot as f64 * 64.0,
                 screen_center.1 as f64 * 2.0 - 64.0,
                 64.0,
-                64.0
+                64.0,
             );
             canvas.context.stroke();
         }

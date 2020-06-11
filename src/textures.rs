@@ -1,4 +1,4 @@
-use crate::{loader::load_images, items::Item};
+use crate::{items::Item, loader::load_images};
 use wasm_game_lib::graphics::{canvas::Canvas, image::Image};
 
 // resize : convert running.png -interpolate Integer -filter point -resize "200%" output.png

@@ -1,4 +1,5 @@
 use console_error_panic_hook::set_once;
+use std::{cell::RefCell, rc::Rc};
 use wasm_bindgen::{prelude::*, JsCast};
 use wasm_game_lib::inputs::event::types::*;
 use wasm_game_lib::{
@@ -6,26 +7,26 @@ use wasm_game_lib::{
     inputs::{
         event::Event,
         keyboard::{Key, KeyboardEvent},
-        mouse::{start_recording_mouse_events, get_mouse_position, is_pressed, Button, MouseEvent},
+        mouse::{get_mouse_position, is_pressed, start_recording_mouse_events, Button, MouseEvent},
     },
 };
-use std::{rc::Rc, cell::RefCell};
 
-mod items;
+mod blocks;
 mod coords;
+mod items;
 mod loader;
 mod map;
 mod player;
 mod progress_bar;
 mod textures;
-mod blocks;
 use blocks::BlockType;
 use map::Map;
 use player::Player;
 use textures::Textures;
 
 fn request_animation_frame(f: &Closure<dyn FnMut()>) {
-    web_sys::window().unwrap()
+    web_sys::window()
+        .unwrap()
         .request_animation_frame(f.as_ref().unchecked_ref())
         .expect("should register `requestAnimationFrame` OK");
 }
@@ -35,8 +36,7 @@ pub async fn start() {
     set_once();
     start_recording_mouse_events();
 
-    let (window, mut canvas) =
-        Window::init_with_events(KEYBOARD_EVENT + MOUSE_EVENT);
+    let (window, mut canvas) = Window::init_with_events(KEYBOARD_EVENT + MOUSE_EVENT);
     let window = Rc::new(RefCell::new(window));
 
     let screen_center = (
@@ -86,13 +86,18 @@ pub async fn start() {
                         }
                     }
                     _ => (),
-                }
+                },
                 _ => (),
             }
         }
 
         if is_pressed(Button::Main) {
-            let (x, y) = crate::coords::screen_to_map(get_mouse_position().0 as f64, get_mouse_position().1 as f64, &player, screen_center);
+            let (x, y) = crate::coords::screen_to_map(
+                get_mouse_position().0 as f64,
+                get_mouse_position().1 as f64,
+                &player,
+                screen_center,
+            );
             if map[(x, y)].block_type != BlockType::Air {
                 let items = map[(x, y)].as_item();
                 for item in items {
@@ -103,9 +108,15 @@ pub async fn start() {
         }
 
         if is_pressed(Button::Secondary) {
-            let (x, y) = crate::coords::screen_to_map(get_mouse_position().0 as f64, get_mouse_position().1 as f64, &player, screen_center);
+            let (x, y) = crate::coords::screen_to_map(
+                get_mouse_position().0 as f64,
+                get_mouse_position().1 as f64,
+                &player,
+                screen_center,
+            );
             if map[(x, y)].block_type == BlockType::Air {
-                if let Some((item, quantity)) = &mut player.inventory[player.selected_slot as usize] {
+                if let Some((item, quantity)) = &mut player.inventory[player.selected_slot as usize]
+                {
                     if *quantity > 0 {
                         if let Some(block) = item.as_block() {
                             *quantity -= 1;
@@ -131,5 +142,9 @@ pub async fn start() {
         request_animation_frame(f.borrow().as_ref().unwrap());
     }) as Box<dyn FnMut()>));
     request_animation_frame(g.borrow().as_ref().unwrap());
-    window2.borrow().window.request_animation_frame(g.borrow().as_ref().unwrap().as_ref().unchecked_ref()).unwrap();
+    window2
+        .borrow()
+        .window
+        .request_animation_frame(g.borrow().as_ref().unwrap().as_ref().unchecked_ref())
+        .unwrap();
 }

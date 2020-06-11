@@ -8,8 +8,8 @@ use std::time::Duration;
 use wasm_bindgen::JsValue;
 use wasm_game_lib::{
     graphics::{canvas::*, color::*, font::*, image::*, text::*},
+    log,
     system::sleep,
-    log
 };
 
 pub async fn load_images(images: Vec<&str>, mut canvas: &mut Canvas) -> Vec<Image> {

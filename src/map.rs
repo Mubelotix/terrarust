@@ -1,8 +1,8 @@
 use crate::{
+    blocks::{Block, BlockType, NaturalBackground},
     coords::{map_to_screen, x_to_biome, x_to_chunk, x_to_chunk_and_column},
     player::Player,
-    textures::{Textures, get_texture_idx},
-    blocks::{Block, BlockType, NaturalBackground},
+    textures::{get_texture_idx, Textures},
 };
 use arr_macro::arr;
 use std::{hash::Hasher, rc::Rc};
@@ -155,8 +155,10 @@ impl Map {
             chunk_canvas.set_width(32 * 16);
             chunk_canvas.set_height(100 * 16);
 
-            map.chunks
-                .push((Chunk::generate(&mut height, &mut slope, true, i * 32), chunk_canvas));
+            map.chunks.push((
+                Chunk::generate(&mut height, &mut slope, true, i * 32),
+                chunk_canvas,
+            ));
         }
 
         for i in 0..10 {
@@ -178,10 +180,12 @@ impl Map {
                     self[(x, y - 1)].can_pass_through(),
                     self[(x + 1, y)].can_pass_through(),
                     self[(x, y + 1)].can_pass_through(),
-                    self[(x - 1, y)].can_pass_through()
+                    self[(x - 1, y)].can_pass_through(),
                 ));
 
-                if block.natural_background == NaturalBackground::Dirt && (block.block_type == BlockType::Air || block_texture_idx != 0) {
+                if block.natural_background == NaturalBackground::Dirt
+                    && (block.block_type == BlockType::Air || block_texture_idx != 0)
+                {
                     let texture_idx = get_texture_idx((
                         self[(x, y - 1)].natural_background == NaturalBackground::Sky,
                         self[(x + 1, y)].natural_background == NaturalBackground::Sky,
@@ -198,10 +202,11 @@ impl Map {
                     }
                     BlockType::Dirt => {
                         self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.dirt.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, x_idx as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
-                    },
-                    BlockType::Tree => {
-                        self.chunks[chunk_index].1.draw_image((x_idx as f64 * 16.0 - 80.0, y_idx as f64 * 16.0 - 240.0), &self.textures.tree)
                     }
+                    BlockType::Tree => self.chunks[chunk_index].1.draw_image(
+                        (x_idx as f64 * 16.0 - 80.0, y_idx as f64 * 16.0 - 240.0),
+                        &self.textures.tree,
+                    ),
                 }
             }
         }
@@ -227,12 +232,15 @@ impl Map {
             self.first_chunk_number -= 1;
             self.chunks.insert(
                 0,
-                (Chunk::generate(
-                    &mut config.0,
-                    &mut config.1,
-                    false,
-                    self.first_chunk_number * 32,
-                ), chunk_canvas),
+                (
+                    Chunk::generate(
+                        &mut config.0,
+                        &mut config.1,
+                        false,
+                        self.first_chunk_number * 32,
+                    ),
+                    chunk_canvas,
+                ),
             );
             self.update_chunk(2);
 
@@ -246,12 +254,15 @@ impl Map {
             self.chunks.remove(0);
             let mut config = self.chunks[self.chunks.len() - 1].0.right_config;
             self.first_chunk_number += 1;
-            self.chunks.push((Chunk::generate(
-                &mut config.0,
-                &mut config.1,
-                true,
-                self.first_chunk_number * 32,
-            ), chunk_canvas));
+            self.chunks.push((
+                Chunk::generate(
+                    &mut config.0,
+                    &mut config.1,
+                    true,
+                    self.first_chunk_number * 32,
+                ),
+                chunk_canvas,
+            ));
             self.update_chunk(self.chunks.len() - 2);
 
             diff = self.first_chunk_number - chunk_number;
@@ -268,10 +279,15 @@ impl Map {
     ) {
         //canvas.draw_canvas((5.0, 200.0), &self.chunks[8].1);
         for (chunk_idx, chunk_canvas) in self.chunks.iter().map(|(_a, b)| b).enumerate() {
-            let (mut screen_x, mut screen_y) = map_to_screen((chunk_idx as isize + self.first_chunk_number) * 32, self.first_block as isize, &player, screen_center);
+            let (mut screen_x, mut screen_y) = map_to_screen(
+                (chunk_idx as isize + self.first_chunk_number) * 32,
+                self.first_block as isize,
+                &player,
+                screen_center,
+            );
             screen_x = screen_x.floor();
             screen_y = screen_y.floor();
-            
+
             canvas.draw_canvas((screen_x, screen_y), &chunk_canvas);
         }
     }
@@ -292,7 +308,7 @@ impl std::ops::Index<(isize, isize)> for Map {
             }
         }
 
-        & Block {
+        &Block {
             block_type: BlockType::Air,
             natural_background: NaturalBackground::Sky,
         }

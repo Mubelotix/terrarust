@@ -27,9 +27,7 @@ impl Inventory {
         for _ in 0..slots_number {
             slots.push(None);
         }
-        Inventory {
-            slots
-        }
+        Inventory { slots }
     }
 
     pub fn push(&mut self, item: Item) -> bool {
@@ -48,7 +46,7 @@ impl Inventory {
                 return true;
             }
         }
-        
+
         false
     }
 }
