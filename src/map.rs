@@ -284,6 +284,14 @@ impl Map {
         player: &Player,
         screen_center: (isize, isize),
     ) {
+        canvas.clear();
+        let gradient = canvas.context.create_radial_gradient(screen_center.0 as f64, screen_center.1 as f64 - 50.0, 50.0, screen_center.0 as f64, screen_center.1 as f64 - 50.0, 500.0).unwrap();
+        gradient.add_color_stop(0.0, "rgba(0, 0, 0, 1.0)").unwrap();
+        gradient.add_color_stop(0.5, "rgba(0, 0, 0, 0.2)").unwrap();
+        gradient.add_color_stop(1.0, "rgba(0, 0, 0, 0.0)").unwrap();
+        canvas.context.set_fill_style(&gradient);
+        canvas.context.fill_rect(0.0, 0.0, canvas.get_width() as f64, canvas.get_height() as f64);
+
         self.canvas.clear();
         for (chunk_idx, chunk_canvas) in self.chunks.iter().map(|(_a, b)| b).enumerate() {
             self.canvas.draw_canvas(((chunk_idx as f64 * 32.0 * 16.0) - 5.0 * 16.0, self.first_block as f64 * 16.0), &chunk_canvas);
@@ -298,7 +306,13 @@ impl Map {
         screen_x = screen_x.floor();
         screen_y = screen_y.floor();
 
+        canvas.context.set_global_composite_operation("source-in").unwrap();
         canvas.draw_canvas((screen_x, screen_y), &self.canvas);
+        canvas.context.set_global_composite_operation("destination-over").unwrap();
+        use wasm_bindgen::JsValue;
+        canvas.context.set_fill_style(&JsValue::from_str("rgb(0,0,0)"));
+        canvas.context.fill_rect(0.0,0.0, screen_center.0 as f64 * 2.0, screen_center.1 as f64 * 2.0);
+        canvas.context.set_global_composite_operation("source-over").unwrap();
     }
 }
 
