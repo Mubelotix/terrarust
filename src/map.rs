@@ -7,7 +7,7 @@ use crate::{
 use arr_macro::arr;
 use std::{hash::Hasher, rc::Rc};
 use twox_hash::XxHash32;
-use wasm_game_lib::{graphics::{canvas::Canvas, color::Color}, log};
+use wasm_game_lib::{graphics::{canvas::Canvas}, log};
 
 #[derive(Debug)]
 pub enum Biome {
@@ -193,7 +193,6 @@ impl Map {
                 y += 1;
             }
 
-            use wasm_bindgen::JsValue;
             self.chunks[chunk_index].2.context.set_fill_style(&JsValue::from_str("rgb(255,255,255)"));
             self.chunks[chunk_index].2.context.fill_rect((x_idx+5) as f64 * 16.0,0.0,16.0, y as f64 * 16.0);
             /*self.chunks[chunk_index].1.context.set_fill_style(&JsValue::from_str("rgb(135,206,235)"));
