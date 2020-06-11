@@ -7,7 +7,7 @@ use crate::{
 use arr_macro::arr;
 use std::{hash::Hasher, rc::Rc};
 use twox_hash::XxHash32;
-use wasm_game_lib::{graphics::canvas::Canvas, log};
+use wasm_game_lib::{graphics::{canvas::Canvas, color::Color}, log};
 
 #[derive(Debug)]
 pub enum Biome {
@@ -130,7 +130,7 @@ impl Chunk {
 }
 
 pub struct Map {
-    chunks: Vec<(Chunk, Canvas)>,
+    chunks: Vec<(Chunk, Canvas, Canvas)>,
     canvas: Canvas,
     first_chunk_number: isize,
     first_block: usize,
@@ -159,9 +159,14 @@ impl Map {
             chunk_canvas.set_width(42 * 16);
             chunk_canvas.set_height(100 * 16);
 
+            let mut light_chunk_canvas = Canvas::new();
+            light_chunk_canvas.set_width(42 * 16);
+            light_chunk_canvas.set_height(100 * 16);
+
             map.chunks.push((
                 Chunk::generate(&mut height, &mut slope, true, i * 32),
                 chunk_canvas,
+                light_chunk_canvas
             ));
         }
 
@@ -174,6 +179,33 @@ impl Map {
 
     pub fn update_chunk(&mut self, chunk_index: usize) {
         self.chunks[chunk_index].1.clear();
+        use wasm_bindgen::JsValue;
+        self.chunks[chunk_index].1.context.set_fill_style(&JsValue::from_str("rgb(135,206,235)"));
+        self.chunks[chunk_index].1.context.fill_rect(5.0 * 16.0, 0.0, 42.0 * 16.0, 100.0 * 16.0);
+
+        self.chunks[chunk_index].2.clear();
+
+        for x_idx in 0..32 {
+            let x = x_idx as isize + (chunk_index as isize + self.first_chunk_number) * 32;
+            let mut y = self.first_block as isize;
+
+            while self[(x, y)].block_type == BlockType::Air && self[(x, y)].natural_background == NaturalBackground::Sky && y < 100 {
+                y += 1;
+            }
+
+            use wasm_bindgen::JsValue;
+            self.chunks[chunk_index].2.context.set_fill_style(&JsValue::from_str("rgb(255,255,255)"));
+            self.chunks[chunk_index].2.context.fill_rect((x_idx+5) as f64 * 16.0,0.0,16.0, y as f64 * 16.0);
+            /*self.chunks[chunk_index].1.context.set_fill_style(&JsValue::from_str("rgb(135,206,235)"));
+            self.chunks[chunk_index].1.context.fill_rect((x_idx+5) as f64 * 16.0,0.0,16.0, y as f64 * 16.0);*/
+
+            let gradient = self.chunks[chunk_index].2.context.create_radial_gradient((x_idx + 5) as f64 * 16.0, y as f64 * 16.0 + 8.0, 8.0, (x_idx + 5) as f64 * 16.0, y as f64 * 16.0 + 8.0, 64.0).unwrap();
+            gradient.add_color_stop(0.0, "rgba(255, 255, 255, 1.0)").unwrap();
+            gradient.add_color_stop(1.0, "rgba(255, 255, 255, 0.0)").unwrap();
+            self.chunks[chunk_index].2.context.set_fill_style(&gradient);
+            self.chunks[chunk_index].2.context.fill_rect(0.0,0.0,42.0*16.0,100.0*16.0);
+        }
+
         for x_idx in 0..32 {
             for y_idx in 0..100 {
                 let x = x_idx as isize + (chunk_index as isize + self.first_chunk_number) * 32;
@@ -234,6 +266,10 @@ impl Map {
             chunk_canvas.set_width(42 * 16);
             chunk_canvas.set_height(100 * 16);
 
+            let mut light_chunk_canvas = Canvas::new();
+            light_chunk_canvas.set_width(42 * 16);
+            light_chunk_canvas.set_height(100 * 16);
+
             self.chunks.remove(self.chunks.len() - 1);
             let mut config = self.chunks[0].0.left_config;
             self.first_chunk_number -= 1;
@@ -247,6 +283,7 @@ impl Map {
                         self.first_chunk_number * 32,
                     ),
                     chunk_canvas,
+                    light_chunk_canvas
                 ),
             );
             self.update_chunk(2);
@@ -257,6 +294,10 @@ impl Map {
             let mut chunk_canvas = Canvas::new();
             chunk_canvas.set_width(42 * 16);
             chunk_canvas.set_height(100 * 16);
+
+            let mut light_chunk_canvas = Canvas::new();
+            light_chunk_canvas.set_width(42 * 16);
+            light_chunk_canvas.set_height(100 * 16);
 
             self.chunks.remove(0);
             let mut config = self.chunks[self.chunks.len() - 1].0.right_config;
@@ -269,6 +310,7 @@ impl Map {
                     self.first_chunk_number * 32,
                 ),
                 chunk_canvas,
+                light_chunk_canvas
             ));
             self.update_chunk(self.chunks.len() - 2);
 
@@ -292,8 +334,21 @@ impl Map {
         canvas.context.set_fill_style(&gradient);
         canvas.context.fill_rect(0.0, 0.0, canvas.get_width() as f64, canvas.get_height() as f64);
 
+        for (chunk_idx, light_canvas) in self.chunks.iter().map(|(_a, _b, c)| c).enumerate() {
+            let (mut screen_x, mut screen_y) = map_to_screen(
+                (self.first_chunk_number + chunk_idx as isize) * 32,
+                self.first_block as isize,
+                &player,
+                screen_center,
+            );
+            screen_x = screen_x.floor();
+            screen_y = screen_y.floor();
+
+            canvas.draw_canvas((screen_x - 5.0 * 16.0, screen_y), &light_canvas);
+        }
+
         self.canvas.clear();
-        for (chunk_idx, chunk_canvas) in self.chunks.iter().map(|(_a, b)| b).enumerate() {
+        for (chunk_idx, chunk_canvas) in self.chunks.iter().map(|(_a, b, _c)| b).enumerate() {
             self.canvas.draw_canvas(((chunk_idx as f64 * 32.0 * 16.0) - 5.0 * 16.0, self.first_block as f64 * 16.0), &chunk_canvas);
         }
 
@@ -310,7 +365,8 @@ impl Map {
         canvas.draw_canvas((screen_x, screen_y), &self.canvas);
         canvas.context.set_global_composite_operation("destination-over").unwrap();
         use wasm_bindgen::JsValue;
-        canvas.context.set_fill_style(&JsValue::from_str("rgb(0,0,0)"));
+        use wasm_game_lib::graphics::color::Color;
+        canvas.context.set_fill_style(&JsValue::from_str(&Color::black().to_string()));
         canvas.context.fill_rect(0.0,0.0, screen_center.0 as f64 * 2.0, screen_center.1 as f64 * 2.0);
         canvas.context.set_global_composite_operation("source-over").unwrap();
     }
