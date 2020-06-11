@@ -131,6 +131,7 @@ impl Chunk {
 
 pub struct Map {
     chunks: Vec<(Chunk, Canvas)>,
+    canvas: Canvas,
     first_chunk_number: isize,
     first_block: usize,
     textures: Rc<Textures>,
@@ -147,7 +148,10 @@ impl Map {
             first_block: 0,
             air: Block::new(BlockType::Air, NaturalBackground::Sky),
             to_update_chunks: Vec::new(),
+            canvas: Canvas::new(),
         };
+        map.canvas.set_width(32 * 16 * 9);
+        map.canvas.set_height(100 * 16);
         let mut height: f64 = 20.0;
         let mut slope: f64 = 0.2;
         for i in -5..5 {
@@ -280,19 +284,21 @@ impl Map {
         player: &Player,
         screen_center: (isize, isize),
     ) {
-        //canvas.draw_canvas((5.0, 200.0), &self.chunks[8].1);
+        self.canvas.clear();
         for (chunk_idx, chunk_canvas) in self.chunks.iter().map(|(_a, b)| b).enumerate() {
-            let (mut screen_x, mut screen_y) = map_to_screen(
-                (chunk_idx as isize + self.first_chunk_number) * 32,
-                self.first_block as isize,
-                &player,
-                screen_center,
-            );
-            screen_x = screen_x.floor();
-            screen_y = screen_y.floor();
-
-            canvas.draw_canvas((screen_x - 5.0 * 16.0, screen_y), &chunk_canvas);
+            self.canvas.draw_canvas(((chunk_idx as f64 * 32.0 * 16.0) - 5.0 * 16.0, self.first_block as f64 * 16.0), &chunk_canvas);
         }
+
+        let (mut screen_x, mut screen_y) = map_to_screen(
+            (self.first_chunk_number) * 32,
+            self.first_block as isize,
+            &player,
+            screen_center,
+        );
+        screen_x = screen_x.floor();
+        screen_y = screen_y.floor();
+
+        canvas.draw_canvas((screen_x, screen_y), &self.canvas);
     }
 }
 
