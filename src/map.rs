@@ -152,7 +152,7 @@ impl Map {
         let mut slope: f64 = 0.2;
         for i in -5..5 {
             let mut chunk_canvas = Canvas::new();
-            chunk_canvas.set_width(32 * 16);
+            chunk_canvas.set_width(42 * 16);
             chunk_canvas.set_height(100 * 16);
 
             map.chunks.push((
@@ -192,19 +192,22 @@ impl Map {
                         self[(x, y + 1)].natural_background == NaturalBackground::Sky,
                         self[(x - 1, y)].natural_background == NaturalBackground::Sky,
                     ));
-                    self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.background_dirt.get_html_element(), texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, x_idx as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
+                    self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.background_dirt.get_html_element(), texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
                 }
 
                 match block.block_type {
                     BlockType::Air => (),
                     BlockType::Grass => {
-                        self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.grass.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, x_idx as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
+                        self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.grass.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
                     }
                     BlockType::Dirt => {
-                        self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.dirt.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, x_idx as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
+                        self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.dirt.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
                     }
                     BlockType::Tree => self.chunks[chunk_index].1.draw_image(
-                        (x_idx as f64 * 16.0 - 80.0, y_idx as f64 * 16.0 - 240.0),
+                        (
+                            (x_idx + 5) as f64 * 16.0 - 80.0,
+                            y_idx as f64 * 16.0 - 240.0,
+                        ),
                         &self.textures.tree,
                     ),
                 }
@@ -224,7 +227,7 @@ impl Map {
         let mut diff = self.first_chunk_number - chunk_number;
         while diff > -4 {
             let mut chunk_canvas = Canvas::new();
-            chunk_canvas.set_width(32 * 16);
+            chunk_canvas.set_width(42 * 16);
             chunk_canvas.set_height(100 * 16);
 
             self.chunks.remove(self.chunks.len() - 1);
@@ -248,7 +251,7 @@ impl Map {
         }
         while diff < -4 {
             let mut chunk_canvas = Canvas::new();
-            chunk_canvas.set_width(32 * 16);
+            chunk_canvas.set_width(42 * 16);
             chunk_canvas.set_height(100 * 16);
 
             self.chunks.remove(0);
@@ -288,7 +291,7 @@ impl Map {
             screen_x = screen_x.floor();
             screen_y = screen_y.floor();
 
-            canvas.draw_canvas((screen_x, screen_y), &chunk_canvas);
+            canvas.draw_canvas((screen_x - 5.0 * 16.0, screen_y), &chunk_canvas);
         }
     }
 }
