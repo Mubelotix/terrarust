@@ -135,6 +135,7 @@ pub struct Map {
     first_block: usize,
     textures: Rc<Textures>,
     air: Block,
+    to_update_chunks: Vec<usize>,
 }
 
 impl Map {
@@ -145,6 +146,7 @@ impl Map {
             first_chunk_number: -5,
             first_block: 0,
             air: Block::new(BlockType::Air, NaturalBackground::Sky),
+            to_update_chunks: Vec::new(),
         };
         let mut height: f64 = 20.0;
         let mut slope: f64 = 0.2;
@@ -165,6 +167,7 @@ impl Map {
     }
 
     pub fn update_chunk(&mut self, chunk_index: usize) {
+        self.chunks[chunk_index].1.clear();
         for x_idx in 0..32 {
             for y_idx in 0..100 {
                 let x = x_idx as isize + (chunk_index as isize + self.first_chunk_number) * 32;
@@ -206,6 +209,12 @@ impl Map {
 
     pub fn update_chunks(&mut self, player: &Player) {
         let chunk_number = x_to_chunk(player.x.floor() as isize);
+
+        self.to_update_chunks.dedup();
+        for idx in 0..self.to_update_chunks.len() {
+            self.update_chunk(self.to_update_chunks[idx]);
+        }
+        self.to_update_chunks.clear();
 
         let mut diff = self.first_chunk_number - chunk_number;
         while diff > -4 {
@@ -292,12 +301,19 @@ impl std::ops::Index<(isize, isize)> for Map {
 
 impl std::ops::IndexMut<(isize, isize)> for Map {
     fn index_mut(&mut self, (x, y): (isize, isize)) -> &mut Self::Output {
-        let (chunk, column) = x_to_chunk_and_column(x);
-        let chunk_index = chunk - self.first_chunk_number;
+        let (chunk_number, column) = x_to_chunk_and_column(x);
+        let chunk_index = chunk_number - self.first_chunk_number;
 
         if y > 0 && chunk_index > 0 {
             if let Some(chunk) = self.chunks.get_mut(chunk_index as usize) {
                 if let Some(block) = chunk.0.blocks[column as usize].get_mut(y as usize) {
+                    self.to_update_chunks.push(chunk_index as usize);
+                    if column == 0 {
+                        self.to_update_chunks.push((chunk_index - 1) as usize);
+                    }
+                    if column == 31 {
+                        self.to_update_chunks.push((chunk_index + 1) as usize);
+                    }
                     return block;
                 }
             }
