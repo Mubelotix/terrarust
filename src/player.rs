@@ -159,7 +159,7 @@ impl Player {
     pub fn handle_events(&mut self, keys: (bool, bool, bool, bool), map: &Map, frame: usize) {
         if keys.1 {
             if self.can_move_right_by(0.3, &map) {
-                self.x += 0.3;
+                self.x += 0.15;
                 self.last_frame_running = frame;
                 self.to_left = false;
             }
@@ -167,7 +167,7 @@ impl Player {
             if self.is_touching_the_surface(&map) && !self.can_move_right_by(0.9, &map) {
                 self.y -= 1.0;
                 if self.can_move_right_by(0.9, &map) {
-                    self.speed_y = -0.36;
+                    self.speed_y = -0.29;
                     self.last_frame_running = frame;
                     self.to_left = false;
                 }
@@ -175,11 +175,11 @@ impl Player {
             }
         }
         if keys.0 && self.is_touching_the_surface(&map) {
-            self.speed_y = -0.40;
+            self.speed_y = -0.45;
         }
         if keys.3 {
             if self.can_move_left_by(0.3, &map) {
-                self.x -= 0.3;
+                self.x -= 0.15;
                 self.last_frame_running = frame;
                 self.to_left = true;
             }
@@ -187,7 +187,7 @@ impl Player {
             if self.is_touching_the_surface(&map) && !self.can_move_left_by(0.9, &map) {
                 self.y -= 1.0;
                 if self.can_move_left_by(0.9, &map) {
-                    self.speed_y = -0.36;
+                    self.speed_y = -0.29;
                     self.last_frame_running = frame;
                     self.to_left = true;
                 }
@@ -210,7 +210,7 @@ impl Player {
             self.y = self.y.ceil() - 0.01;
             self.speed_y = 0.0;
         } else if !self.is_touching_the_surface(&map) {
-            self.speed_y += 0.03;
+            self.speed_y += 0.02;
         }
     }
 
@@ -225,8 +225,8 @@ impl Player {
         mut frame: usize,
     ) {
         if frame - self.last_frame_running < 6 {
-            frame -= frame % 5;
-            frame /= 5;
+            frame -= frame % 12;
+            frame /= 12;
             frame %= 8;
             let x = frame as f64 * 96.0;
             canvas
