@@ -89,7 +89,7 @@ impl Map {
 
         //self.chunks[chunk_index].2.clear();
 
-        for _idx in 0..self.chunks[chunk_index].3.len() {
+        for _idx in 0..std::cmp::min(self.chunks[chunk_index].3.len(), 25) {
             let (x, y) = self.chunks[chunk_index].3.remove(0);
             self.chunks[chunk_index]
                 .2
@@ -228,6 +228,17 @@ impl Map {
 
             need_init_lights = true;
             diff = self.first_chunk_number - chunk_number;
+        }
+
+        let mut to_update = Vec::new();
+        for (idx, chunk) in self.chunks.iter().enumerate() {
+            if !chunk.3.is_empty() {
+                to_update.push(idx);
+            }
+        }
+
+        for to_update in to_update {
+            self.update_chunk(to_update);
         }
 
         if need_init_lights {
