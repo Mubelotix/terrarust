@@ -87,8 +87,6 @@ impl Map {
             .context
             .fill_rect(5.0 * 16.0, 0.0, 42.0 * 16.0, 100.0 * 16.0);
 
-        //self.chunks[chunk_index].2.clear();
-
         for _idx in 0..std::cmp::min(self.chunks[chunk_index].3.len(), 25) {
             let (x, y) = self.chunks[chunk_index].3.remove(0);
             self.chunks[chunk_index]
@@ -170,6 +168,10 @@ impl Map {
 
         let mut diff = self.first_chunk_number - chunk_number;
         let mut need_init_lights = false;
+
+        let mut to_update_offset: isize = 0;
+        let mut to_update = Vec::new();
+
         while diff > -4 {
             let mut chunk_canvas = Canvas::new();
             chunk_canvas.set_width(42 * 16);
@@ -196,7 +198,8 @@ impl Map {
                     Vec::new(),
                 ),
             );
-            self.update_chunk(2);
+            to_update.push(1);
+            to_update_offset += 1;
 
             need_init_lights = true;
             diff = self.first_chunk_number - chunk_number;
@@ -224,18 +227,25 @@ impl Map {
                 light_chunk_canvas,
                 Vec::new(),
             ));
-            self.update_chunk(self.chunks.len() - 2);
+            to_update.push(self.chunks.len() - 1);
+            to_update_offset -= 1;
 
             need_init_lights = true;
             diff = self.first_chunk_number - chunk_number;
         }
 
-        let mut to_update = Vec::new();
+        for to_update in to_update.iter_mut() {
+            *to_update = (*to_update as isize + to_update_offset) as usize;
+        }
+
         for (idx, chunk) in self.chunks.iter().enumerate() {
             if !chunk.3.is_empty() {
                 to_update.push(idx);
             }
         }
+
+        to_update.sort();
+        to_update.dedup();
 
         for to_update in to_update {
             self.update_chunk(to_update);
