@@ -105,6 +105,7 @@ pub async fn start() {
                 }
             }
             map[(x, y)].block_type = BlockType::Air;
+            map.update_lights();
         }
 
         if is_pressed(Button::Secondary) {

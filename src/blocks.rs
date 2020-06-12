@@ -1,9 +1,10 @@
 use crate::items::Item;
 
-#[derive(PartialEq, Clone, Copy, Debug)]
+#[derive(PartialEq, Clone, Debug)]
 pub struct Block {
     pub block_type: BlockType,
     pub natural_background: NaturalBackground,
+    pub light: usize,
 }
 
 impl Block {
@@ -11,11 +12,12 @@ impl Block {
         Block {
             block_type,
             natural_background,
+            light: 0,
         }
     }
 
     pub fn can_pass_through(&self) -> bool {
-        self.block_type.can_pass_through()
+        self.block_type.clone().can_pass_through()
     }
 
     pub fn as_item(&self) -> Vec<Item> {
@@ -23,7 +25,7 @@ impl Block {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum BlockType {
     Grass,
     Air,
@@ -49,9 +51,18 @@ impl BlockType {
             BlockType::Tree => vec![Item::Log, Item::WoodStick, Item::Foliage],
         }
     }
+
+    pub fn get_light_loss(&self) -> usize {
+        match self {
+            BlockType::Grass => 6,
+            BlockType::Dirt => 10,
+            BlockType::Air => 1,
+            BlockType::Tree => 1,
+        }
+    }
 }
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum NaturalBackground {
     Sky,
     Dirt,
