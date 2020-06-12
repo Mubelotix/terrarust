@@ -105,7 +105,8 @@ pub async fn start() {
                 }
             }
             map[(x, y)].block_type = BlockType::Air;
-            map.update_lights();
+            map.light_update.push((x, y));
+            map.spread_lights();
         }
 
         if is_pressed(Button::Secondary) {
@@ -125,6 +126,8 @@ pub async fn start() {
                                 player.inventory[player.selected_slot as usize] = None;
                             }
                             map[(x, y)].block_type = block;
+                            map.light_update.push((x, y));
+                            map.spread_lights();
                         }
                     }
                 }

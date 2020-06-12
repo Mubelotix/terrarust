@@ -137,7 +137,7 @@ pub struct Map {
     textures: Rc<Textures>,
     air: Block,
     to_update_chunks: Vec<usize>,
-    light_update: Vec<(isize, isize)>,
+    pub light_update: Vec<(isize, isize)>,
 }
 
 impl Map {
@@ -176,7 +176,7 @@ impl Map {
             map.update_chunk(i);
         }
 
-        map.update_lights();
+        map.init_lights();
 
         map
     }
@@ -194,70 +194,17 @@ impl Map {
         
         for x_idx in 0..32 {
             for y_idx in 0..100 {
-                if self.chunks[chunk_index].0.blocks[x_idx][y_idx].light > 50 {
+                /*if self.chunks[chunk_index].0.blocks[x_idx][y_idx].light > 50 {
                     let gradient = self.chunks[chunk_index].2.context.create_radial_gradient((x_idx + 5) as f64 * 16.0 + 8.0, y_idx as f64 * 16.0 + 8.0, 0.0, (x_idx + 5) as f64 * 16.0 + 8.0, y_idx as f64 * 16.0 + 8.0, 48.0).unwrap();
                     gradient.add_color_stop(0.0, "rgba(255,255,255,1.0)").unwrap();
                     gradient.add_color_stop(0.5, "rgba(255,255,255,0.1)").unwrap();
                     gradient.add_color_stop(1.0, "rgba(255,255,255,0.0)").unwrap();
                     self.chunks[chunk_index].2.context.set_fill_style(&gradient);
                     self.chunks[chunk_index].2.context.fill_rect(0.0,0.0,42.0*16.0,100.0*16.0);
-                    
-                    if x_idx == 5 {
-                        let gradient = self.chunks[chunk_index].2.context.create_radial_gradient((x_idx + 5) as f64 * 16.0 + 8.0, y_idx as f64 * 16.0 + 8.0, 0.0, (x_idx + 5) as f64 * 16.0 + 8.0, y_idx as f64 * 16.0 + 8.0, 48.0).unwrap();
-                    gradient.add_color_stop(0.0, "rgba(0,0,0,0.0)").unwrap();
-                    gradient.add_color_stop(0.5, "rgba(0,0,0,0.1)").unwrap();
-                    gradient.add_color_stop(1.0, "rgba(0,0,0,0.0)").unwrap();
-                    self.chunks[chunk_index].2.context.set_fill_style(&gradient);
-                    self.chunks[chunk_index].2.context.fill_rect(0.0,0.0,42.0*16.0,100.0*16.0);
-                    }
-                }
-                /*self.chunks[chunk_index].2.context.set_fill_style(&JsValue::from(format!("rgba(255,255,255,0.{:02})", self.chunks[chunk_index].0.blocks[x_idx][y_idx].light)));
-                self.chunks[chunk_index].2.context.fill_rect((x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0);*/
+                }*/
+                self.chunks[chunk_index].2.context.set_fill_style(&JsValue::from(format!("rgba(255,255,255,0.{:02})", self.chunks[chunk_index].0.blocks[x_idx][y_idx].light)));
+                self.chunks[chunk_index].2.context.fill_rect((x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0);
             }
-            /*let x = x_idx as isize + (chunk_index as isize + self.first_chunk_number) * 32;
-            let mut y = self.first_block as isize;
-
-            let mut start = Some(0);
-            while self[(x, y)].natural_background == NaturalBackground::Sky && y < 200 {
-                if self[(x, y)].block_type != BlockType::Air {
-                    if let Some(start_y) = start {
-                        self.chunks[chunk_index].2.context.set_fill_style(&JsValue::from_str("rgb(255,255,255)"));
-                        self.chunks[chunk_index].2.context.fill_rect((x_idx+5) as f64 * 16.0, start_y as f64 * 16.0, 16.0, (y - start_y) as f64 * 16.0);
-
-                        let gradient = self.chunks[chunk_index].2.context.create_radial_gradient((x_idx + 5) as f64 * 16.0 + 8.0, y as f64 * 16.0 + 8.0, 8.0, (x_idx + 5) as f64 * 16.0, y as f64 * 16.0 + 8.0, 128.0).unwrap();
-                        gradient.add_color_stop(0.0, "rgba(255, 255, 255, 1.0)").unwrap();
-                        gradient.add_color_stop(0.5, "rgba(255, 255, 255, 0.5)").unwrap();
-                        gradient.add_color_stop(1.0, "rgba(255, 255, 255, 0.0)").unwrap();
-                        self.chunks[chunk_index].2.context.set_fill_style(&gradient);
-                        self.chunks[chunk_index].2.context.fill_rect(0.0,0.0,42.0*16.0,100.0*16.0);
-
-                        start = None;
-                    }
-                } else if start.is_none() {
-                    let gradient = self.chunks[chunk_index].2.context.create_radial_gradient((x_idx + 5) as f64 * 16.0 + 8.0, (y - 1) as f64 * 16.0 + 8.0, 8.0, (x_idx + 5) as f64 * 16.0, y as f64 * 16.0 + 8.0, 128.0).unwrap();
-                        gradient.add_color_stop(0.0, "rgba(255, 255, 255, 1.0)").unwrap();
-                        gradient.add_color_stop(0.5, "rgba(255, 255, 255, 0.5)").unwrap();
-                        gradient.add_color_stop(1.0, "rgba(255, 255, 255, 0.0)").unwrap();
-                        self.chunks[chunk_index].2.context.set_fill_style(&gradient);
-                        self.chunks[chunk_index].2.context.fill_rect(0.0,0.0,42.0*16.0,100.0*16.0);
-                    
-                    start = Some(y);
-                }
-
-                y += 1;
-            }
-            
-            if let Some(start_y) = start {
-                self.chunks[chunk_index].2.context.set_fill_style(&JsValue::from_str("rgb(255,255,255)"));
-                self.chunks[chunk_index].2.context.fill_rect((x_idx+5) as f64 * 16.0, start_y as f64 * 16.0, 16.0, (y - start_y) as f64 * 16.0);
-            }
-
-            let gradient = self.chunks[chunk_index].2.context.create_radial_gradient((x_idx + 5) as f64 * 16.0 + 8.0, y as f64 * 16.0 + 8.0, 8.0, (x_idx + 5) as f64 * 16.0, y as f64 * 16.0 + 8.0, 128.0).unwrap();
-            gradient.add_color_stop(0.0, "rgba(255, 255, 255, 1.0)").unwrap();
-            gradient.add_color_stop(0.5, "rgba(255, 255, 255, 0.5)").unwrap();
-            gradient.add_color_stop(1.0, "rgba(255, 255, 255, 0.0)").unwrap();
-            self.chunks[chunk_index].2.context.set_fill_style(&gradient);
-            self.chunks[chunk_index].2.context.fill_rect(0.0,0.0,42.0*16.0,100.0*16.0);*/
         }
 
         for x_idx in 0..32 {
@@ -373,8 +320,8 @@ impl Map {
         }
     }
 
-    pub fn update_lights(&mut self) {
-        log!("Updating lights");
+    pub fn init_lights(&mut self) {
+        log!("Initializing lights");
 
         self.light_update.clear();
 
@@ -392,14 +339,28 @@ impl Map {
             }
         }
 
+        self.spread_lights();
+
+        log!("Lights initialized");
+    }
+
+    pub fn spread_lights(&mut self) {
+        log!("Updating lights");
+
+        let mut n = 0;
         while !self.light_update.is_empty() {
             self.update_light();
+            n += 1;
+
+            if n % 1000 == 0 {
+                log!("1000 lights spread. Program hanging");
+            }
         }
 
         log!("Lights updated");
     }
 
-    pub fn update_light(&mut self) {
+    fn update_light(&mut self) {
         use std::cmp::max;
 
         if self.light_update.is_empty() {
@@ -410,7 +371,6 @@ impl Map {
         if x < -20 || x > 20 || y < 0 || y > 100 {
             return;
         }
-
         let light;
         let updates;
         {
@@ -420,20 +380,27 @@ impl Map {
             let top_block = &self[(x, y - 1)];
             let bottom_block = &self[(x, y + 1)];
             light = max(max(left_block.light, right_block.light), max(top_block.light, bottom_block.light)).saturating_sub(block.block_type.get_light_loss());
-            updates = (right_block.light + right_block.block_type.get_light_loss() < light, left_block.light + left_block.block_type.get_light_loss() < light, top_block.light + top_block.block_type.get_light_loss() < light, bottom_block.light + bottom_block.block_type.get_light_loss() < light);
+            updates = ( 
+                right_block.light + right_block.block_type.get_light_loss() < light,
+                left_block.light + left_block.block_type.get_light_loss() < light,
+                top_block.light + top_block.block_type.get_light_loss() < light,
+                bottom_block.light + bottom_block.block_type.get_light_loss() < light
+            );
         }
-        if updates.0 && !self.light_update.contains(&(x + 1, y)) {
+        if updates.0 && !self.light_update.contains(&(x + 1, y))  {
             self.light_update.push((x + 1, y))
         }
         if updates.1 && !self.light_update.contains(&(x - 1, y)) {
             self.light_update.push((x - 1, y))
         }
-        if updates.2 && !self.light_update.contains(&(x, y - 1)) {
+        if updates.2 && !self.light_update.contains(&(x, y - 1)) && y != 1 && y != 2 && y != 3 {
             self.light_update.push((x, y - 1))
         }
         if updates.3 && !self.light_update.contains(&(x, y + 1)) {
             self.light_update.push((x, y + 1))
         }
+
+        self[(x, y)].light = light;
     }
 }
 
@@ -575,7 +542,7 @@ fn test() {
         ));
     }
 
-    map.update_lights();
+    map.init_lights();
 
     println!("{:?}", map[(10, 10)]);
 
