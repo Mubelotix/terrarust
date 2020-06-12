@@ -1,11 +1,14 @@
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use terrarust::{map::*, blocks::*, chunks::*};
+use criterion::{criterion_group, criterion_main, Criterion};
+
 
 #[cfg(target_arch = "wasm32")]
 pub fn map_initialization(_c: &mut Criterion) {}
 
 #[cfg(not(target_arch = "wasm32"))]
 pub fn map_initialization(c: &mut Criterion) {
+    use terrarust::{map::*, blocks::*, chunks::*};
+    use criterion::black_box;
+
     fn function(_useless: usize) {
         let mut map = Map {
             chunks: Vec::new(),
