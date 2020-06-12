@@ -86,7 +86,7 @@ impl Chunk {
                 *slope -= biome.get_frequency() / 3.0;
             }
 
-            let hasher2 = XxHash32::with_seed(42); // to avoid generating a tree if there is a tree at the left
+            let hasher2 = XxHash32::with_seed(42); // to avoid generating a tree if there is a tree at the left // does not work
             hasher.write_isize(x-1);
             let tree = hash % biome.get_tree_prob() as u64 == 0 && hasher2.finish() % biome.get_tree_prob() as u64 != 0;
 
@@ -263,6 +263,7 @@ impl Map {
         self.to_update_chunks.clear();
 
         let mut diff = self.first_chunk_number - chunk_number;
+        let mut need_init_lights = false;
         while diff > -4 {
             let mut chunk_canvas = Canvas::new();
             chunk_canvas.set_width(42 * 16);
@@ -289,7 +290,8 @@ impl Map {
                 ),
             );
             self.update_chunk(2);
-
+            
+            need_init_lights = true;
             diff = self.first_chunk_number - chunk_number;
         }
         while diff < -4 {
@@ -316,7 +318,12 @@ impl Map {
             ));
             self.update_chunk(self.chunks.len() - 2);
 
+            need_init_lights = true;
             diff = self.first_chunk_number - chunk_number;
+        }
+
+        if need_init_lights {
+            self.init_lights();
         }
     }
 
@@ -326,14 +333,14 @@ impl Map {
         self.light_update.clear();
 
         for x in self.first_chunk_number * 32..(self.first_chunk_number + self.chunks.len() as isize) * 32 {
-            for y in 0..2048 {
-                if y == 0 {
+            let mut need_spreading = false;
+            for y in 0..2 {
+                if y == 0 && self[(x,y)].light == 0 {
                     self[(x,y)].light = 100;
-                } else {
-                    self[(x,y)].light = 0;
+                    need_spreading = true;
                 }
                 
-                if y == 1 {
+                if need_spreading {
                     self.light_update.push((x, y, false));
                 }
             }
