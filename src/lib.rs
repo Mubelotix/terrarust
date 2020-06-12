@@ -11,15 +11,15 @@ use wasm_game_lib::{
     },
 };
 
-mod blocks;
-mod coords;
-mod items;
-mod loader;
-mod map;
-mod player;
-mod progress_bar;
-mod textures;
-mod chunks;
+pub mod blocks;
+pub mod coords;
+pub mod items;
+pub mod loader;
+pub mod map;
+pub mod player;
+pub mod progress_bar;
+pub mod textures;
+pub mod chunks;
 use blocks::BlockType;
 use map::Map;
 use player::Player;

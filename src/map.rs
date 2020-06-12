@@ -12,15 +12,15 @@ pub struct Map {
     #[cfg(target_arch = "wasm32")]
     chunks: Vec<(Chunk, Canvas, Canvas)>,
     #[cfg(not(target_arch = "wasm32"))]
-    chunks: Vec<(Chunk, (), ())>,
+    pub chunks: Vec<(Chunk, (), ())>,
     #[cfg(target_arch = "wasm32")]
     canvas: Canvas,
-    first_chunk_number: isize,
-    first_block: usize,
+    pub first_chunk_number: isize,
+    pub first_block: usize,
     #[cfg(target_arch = "wasm32")]
     textures: Rc<Textures>,
-    air: Block,
-    to_update_chunks: Vec<usize>,
+    pub air: Block,
+    pub to_update_chunks: Vec<usize>,
     pub light_update: Vec<(isize, isize, bool)>,
 }
 
@@ -504,42 +504,4 @@ impl std::ops::IndexMut<(isize, isize)> for Map {
 
         &mut self.air
     }
-}
-
-#[test]
-fn test() {
-    use std::mem::MaybeUninit;
-
-    let mut map = Map {
-        chunks: Vec::new(),
-        first_chunk_number: -5,
-        first_block: 0,
-        air: Block {
-            block_type: BlockType::Air,
-            natural_background: NaturalBackground::Sky,
-            light: 0,
-        },
-        to_update_chunks: Vec::new(),
-        light_update: Vec::new(),
-    };
-
-    let mut height: f64 = 20.0;
-    let mut slope: f64 = 0.2;
-    for i in -5..5 {
-        let chunk_canvas = unsafe { MaybeUninit::uninit().assume_init() };
-
-        let light_chunk_canvas = unsafe { MaybeUninit::uninit().assume_init() };
-
-        map.chunks.push((
-            Chunk::generate(&mut height, &mut slope, true, i * 32),
-            chunk_canvas,
-            light_chunk_canvas,
-        ));
-    }
-
-    map.init_lights();
-
-    println!("{:?}", map[(10, 10)]);
-
-    println!("\x1B[1;32mSUCCESS\x1B[0m");
 }
