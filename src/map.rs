@@ -8,12 +8,16 @@ use crate::{
 use std::rc::Rc;
 use wasm_game_lib::{graphics::canvas::Canvas, log};
 
-
 pub struct Map {
+    #[cfg(target_arch = "wasm32")]
     chunks: Vec<(Chunk, Canvas, Canvas)>,
+    #[cfg(not(target_arch = "wasm32"))]
+    chunks: Vec<(Chunk, (), ())>,
+    #[cfg(target_arch = "wasm32")]
     canvas: Canvas,
     first_chunk_number: isize,
     first_block: usize,
+    #[cfg(target_arch = "wasm32")]
     textures: Rc<Textures>,
     air: Block,
     to_update_chunks: Vec<usize>,
@@ -21,6 +25,7 @@ pub struct Map {
 }
 
 impl Map {
+    #[cfg(target_arch = "wasm32")]
     pub fn new(textures: Rc<Textures>) -> Map {
         let mut map = Map {
             chunks: Vec::new(),
@@ -65,6 +70,7 @@ impl Map {
         map
     }
 
+    #[cfg(target_arch = "wasm32")]
     pub fn update_chunk(&mut self, chunk_index: usize) {
         if chunk_index >= 10 {
             return;
@@ -153,6 +159,7 @@ impl Map {
         }
     }
 
+    #[cfg(target_arch = "wasm32")]
     pub fn update_chunks(&mut self, player: &Player) {
         let chunk_number = x_to_chunk(player.x.floor() as isize);
 
@@ -229,8 +236,6 @@ impl Map {
     }
 
     pub fn init_lights(&mut self) {
-        log!("Initializing lights");
-
         self.light_update.clear();
 
         for x in self.first_chunk_number * 32
@@ -250,8 +255,6 @@ impl Map {
         }
 
         self.spread_lights();
-
-        log!("Lights initialized");
     }
 
     pub fn spread_lights(&mut self) {
@@ -351,9 +354,8 @@ impl Map {
 
         self[(x, y)].light = light;
     }
-}
 
-impl Map {
+    #[cfg(target_arch = "wasm32")]
     pub fn draw_on_canvas<'a>(
         &'a mut self,
         canvas: &'a mut Canvas,
@@ -504,18 +506,12 @@ impl std::ops::IndexMut<(isize, isize)> for Map {
     }
 }
 
-#[allow(invalid_value)]
-#[allow(clippy::uninit_assumed_init)]
 #[test]
 fn test() {
     use std::mem::MaybeUninit;
 
-    let textures = unsafe { MaybeUninit::uninit().assume_init() };
-    let canvas = unsafe { MaybeUninit::uninit().assume_init() };
-
     let mut map = Map {
         chunks: Vec::new(),
-        textures,
         first_chunk_number: -5,
         first_block: 0,
         air: Block {
@@ -525,7 +521,6 @@ fn test() {
         },
         to_update_chunks: Vec::new(),
         light_update: Vec::new(),
-        canvas,
     };
 
     let mut height: f64 = 20.0;
