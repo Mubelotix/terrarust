@@ -7,7 +7,7 @@ use crate::{
 use arr_macro::arr;
 use std::{hash::Hasher, rc::Rc};
 use twox_hash::XxHash32;
-use wasm_game_lib::{graphics::{canvas::Canvas}, log};
+use wasm_game_lib::{graphics::canvas::Canvas, log};
 
 #[derive(Debug)]
 pub enum Biome {
@@ -51,7 +51,7 @@ impl Biome {
 }
 
 pub struct Chunk {
-    blocks: Vec<[Block; 2048]>, // 32
+    blocks: Vec<[Block; 2048]>,   // 32
     pub left_config: (f64, f64),  // (height, slope)
     pub right_config: (f64, f64), // idem
 }
@@ -79,32 +79,49 @@ impl Chunk {
                 *slope = -biome.get_max_slope();
             }
 
-            if (*height < biome.get_height().start - 10.0 && *slope < -0.4) || *height < biome.get_height().start {
+            if (*height < biome.get_height().start - 10.0 && *slope < -0.4)
+                || *height < biome.get_height().start
+            {
                 *slope += biome.get_frequency() / 3.0;
             }
-            if (*height > biome.get_height().end + 10.0 && *slope > 0.4) || *height > biome.get_height().end {
+            if (*height > biome.get_height().end + 10.0 && *slope > 0.4)
+                || *height > biome.get_height().end
+            {
                 *slope -= biome.get_frequency() / 3.0;
             }
 
             let hasher2 = XxHash32::with_seed(42); // to avoid generating a tree if there is a tree at the left // does not work
-            hasher.write_isize(x-1);
-            let tree = hash % biome.get_tree_prob() as u64 == 0 && hasher2.finish() % biome.get_tree_prob() as u64 != 0;
+            hasher.write_isize(x - 1);
+            let tree = hash % biome.get_tree_prob() as u64 == 0
+                && hasher2.finish() % biome.get_tree_prob() as u64 != 0;
 
             *height += *slope;
-            
+
             if left_to_right {
                 x += 1;
             } else {
                 x -= 1;
             }
-            
+
             let mut column = arr!(Block{block_type: BlockType::Dirt, natural_background: NaturalBackground::Dirt, light: 0}; 2048);
             for block in column.iter_mut().take(height.floor() as usize) {
-                *block = Block{block_type: BlockType::Air, natural_background: NaturalBackground::Sky, light: 0};
+                *block = Block {
+                    block_type: BlockType::Air,
+                    natural_background: NaturalBackground::Sky,
+                    light: 0,
+                };
             }
-            column[height.floor() as usize] = Block{block_type: BlockType::Grass, natural_background: NaturalBackground::Dirt, light: 0};
+            column[height.floor() as usize] = Block {
+                block_type: BlockType::Grass,
+                natural_background: NaturalBackground::Dirt,
+                light: 0,
+            };
             if tree && height.floor() as usize > 0 {
-                column[height.floor() as usize - 1] = Block{block_type: BlockType::Tree, natural_background: NaturalBackground::Dirt, light: 0};
+                column[height.floor() as usize - 1] = Block {
+                    block_type: BlockType::Tree,
+                    natural_background: NaturalBackground::Dirt,
+                    light: 0,
+                };
             }
             blocks.push(column)
         }
@@ -147,7 +164,11 @@ impl Map {
             textures,
             first_chunk_number: -5,
             first_block: 0,
-            air: Block{block_type: BlockType::Air, natural_background: NaturalBackground::Sky, light: 0},
+            air: Block {
+                block_type: BlockType::Air,
+                natural_background: NaturalBackground::Sky,
+                light: 0,
+            },
             to_update_chunks: Vec::new(),
             canvas: Canvas::new(),
             light_update: Vec::new(),
@@ -168,7 +189,7 @@ impl Map {
             map.chunks.push((
                 Chunk::generate(&mut height, &mut slope, true, i * 32),
                 chunk_canvas,
-                light_chunk_canvas
+                light_chunk_canvas,
             ));
         }
 
@@ -187,11 +208,17 @@ impl Map {
         }
         self.chunks[chunk_index].1.clear();
         use wasm_bindgen::JsValue;
-        self.chunks[chunk_index].1.context.set_fill_style(&JsValue::from_str("rgb(135,206,235)"));
-        self.chunks[chunk_index].1.context.fill_rect(5.0 * 16.0, 0.0, 42.0 * 16.0, 100.0 * 16.0);
+        self.chunks[chunk_index]
+            .1
+            .context
+            .set_fill_style(&JsValue::from_str("rgb(135,206,235)"));
+        self.chunks[chunk_index]
+            .1
+            .context
+            .fill_rect(5.0 * 16.0, 0.0, 42.0 * 16.0, 100.0 * 16.0);
 
         self.chunks[chunk_index].2.clear();
-        
+
         for x_idx in 0..32 {
             for y_idx in 0..100 {
                 /*if self.chunks[chunk_index].0.blocks[x_idx][y_idx].light > 50 {
@@ -202,8 +229,19 @@ impl Map {
                     self.chunks[chunk_index].2.context.set_fill_style(&gradient);
                     self.chunks[chunk_index].2.context.fill_rect(0.0,0.0,42.0*16.0,100.0*16.0);
                 }*/
-                self.chunks[chunk_index].2.context.set_fill_style(&JsValue::from(format!("rgba(255,255,255,0.{:02})", self.chunks[chunk_index].0.blocks[x_idx][y_idx].light)));
-                self.chunks[chunk_index].2.context.fill_rect((x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0);
+                self.chunks[chunk_index]
+                    .2
+                    .context
+                    .set_fill_style(&JsValue::from(format!(
+                        "rgba(255,255,255,0.{:02})",
+                        self.chunks[chunk_index].0.blocks[x_idx][y_idx].light
+                    )));
+                self.chunks[chunk_index].2.context.fill_rect(
+                    (x_idx + 5) as f64 * 16.0,
+                    y_idx as f64 * 16.0,
+                    16.0,
+                    16.0,
+                );
             }
         }
 
@@ -286,11 +324,11 @@ impl Map {
                         self.first_chunk_number * 32,
                     ),
                     chunk_canvas,
-                    light_chunk_canvas
+                    light_chunk_canvas,
                 ),
             );
             self.update_chunk(2);
-            
+
             need_init_lights = true;
             diff = self.first_chunk_number - chunk_number;
         }
@@ -314,7 +352,7 @@ impl Map {
                     self.first_chunk_number * 32,
                 ),
                 chunk_canvas,
-                light_chunk_canvas
+                light_chunk_canvas,
             ));
             self.update_chunk(self.chunks.len() - 2);
 
@@ -332,14 +370,16 @@ impl Map {
 
         self.light_update.clear();
 
-        for x in self.first_chunk_number * 32..(self.first_chunk_number + self.chunks.len() as isize) * 32 {
+        for x in self.first_chunk_number * 32
+            ..(self.first_chunk_number + self.chunks.len() as isize) * 32
+        {
             let mut need_spreading = false;
             for y in 0..2 {
-                if y == 0 && self[(x,y)].light == 0 {
-                    self[(x,y)].light = 100;
+                if y == 0 && self[(x, y)].light == 0 {
+                    self[(x, y)].light = 100;
                     need_spreading = true;
                 }
-                
+
                 if need_spreading {
                     self.light_update.push((x, y, false));
                 }
@@ -371,7 +411,11 @@ impl Map {
         }
 
         let (x, y, cancellation) = self.light_update.remove(0);
-        if x <= self.first_chunk_number * 32 || x >= (self.first_chunk_number + self.chunks.len() as isize) * 32 || y < 0 || y > 100 {
+        if x <= self.first_chunk_number * 32
+            || x >= (self.first_chunk_number + self.chunks.len() as isize) * 32
+            || y < 0
+            || y > 100
+        {
             return;
         }
 
@@ -384,17 +428,17 @@ impl Map {
                 let right_block = &self[(x + 1, y)];
                 let top_block = &self[(x, y - 1)];
                 let bottom_block = &self[(x, y + 1)];
-                updates = ( 
+                updates = (
                     right_block.light + right_block.block_type.get_light_loss() == *light,
                     left_block.light + left_block.block_type.get_light_loss() == *light,
                     top_block.light + top_block.block_type.get_light_loss() == *light,
-                    bottom_block.light + bottom_block.block_type.get_light_loss() == *light
+                    bottom_block.light + bottom_block.block_type.get_light_loss() == *light,
                 );
             }
 
             self[(x, y)].light = 0;
 
-            if updates.0 && !self.light_update.contains(&(x + 1, y, true))  {
+            if updates.0 && !self.light_update.contains(&(x + 1, y, true)) {
                 self.light_update.push((x + 1, y, true))
             }
             if updates.1 && !self.light_update.contains(&(x - 1, y, true)) {
@@ -417,15 +461,19 @@ impl Map {
             let right_block = &self[(x + 1, y)];
             let top_block = &self[(x, y - 1)];
             let bottom_block = &self[(x, y + 1)];
-            light = max(max(left_block.light, right_block.light), max(top_block.light, bottom_block.light)).saturating_sub(block.block_type.get_light_loss());
-            updates = ( 
+            light = max(
+                max(left_block.light, right_block.light),
+                max(top_block.light, bottom_block.light),
+            )
+            .saturating_sub(block.block_type.get_light_loss());
+            updates = (
                 right_block.light + right_block.block_type.get_light_loss() < light,
                 left_block.light + left_block.block_type.get_light_loss() < light,
                 top_block.light + top_block.block_type.get_light_loss() < light,
-                bottom_block.light + bottom_block.block_type.get_light_loss() < light
+                bottom_block.light + bottom_block.block_type.get_light_loss() < light,
             );
         }
-        if updates.0 && !self.light_update.contains(&(x + 1, y, false))  {
+        if updates.0 && !self.light_update.contains(&(x + 1, y, false)) {
             self.light_update.push((x + 1, y, false))
         }
         if updates.1 && !self.light_update.contains(&(x - 1, y, false)) {
@@ -450,12 +498,27 @@ impl Map {
         screen_center: (isize, isize),
     ) {
         canvas.clear();
-        let gradient = canvas.context.create_radial_gradient(screen_center.0 as f64, screen_center.1 as f64 - 50.0, 50.0, screen_center.0 as f64, screen_center.1 as f64 - 50.0, 500.0).unwrap();
+        let gradient = canvas
+            .context
+            .create_radial_gradient(
+                screen_center.0 as f64,
+                screen_center.1 as f64 - 50.0,
+                50.0,
+                screen_center.0 as f64,
+                screen_center.1 as f64 - 50.0,
+                500.0,
+            )
+            .unwrap();
         gradient.add_color_stop(0.0, "rgba(0, 0, 0, 1.0)").unwrap();
         gradient.add_color_stop(0.5, "rgba(0, 0, 0, 0.2)").unwrap();
         gradient.add_color_stop(1.0, "rgba(0, 0, 0, 0.0)").unwrap();
         canvas.context.set_fill_style(&gradient);
-        canvas.context.fill_rect(0.0, 0.0, canvas.get_width() as f64, canvas.get_height() as f64);
+        canvas.context.fill_rect(
+            0.0,
+            0.0,
+            canvas.get_width() as f64,
+            canvas.get_height() as f64,
+        );
 
         for (chunk_idx, light_canvas) in self.chunks.iter().map(|(_a, _b, c)| c).enumerate() {
             let (mut screen_x, mut screen_y) = map_to_screen(
@@ -472,7 +535,13 @@ impl Map {
 
         self.canvas.clear();
         for (chunk_idx, chunk_canvas) in self.chunks.iter().map(|(_a, b, _c)| b).enumerate() {
-            self.canvas.draw_canvas(((chunk_idx as f64 * 32.0 * 16.0) - 5.0 * 16.0, self.first_block as f64 * 16.0), &chunk_canvas);
+            self.canvas.draw_canvas(
+                (
+                    (chunk_idx as f64 * 32.0 * 16.0) - 5.0 * 16.0,
+                    self.first_block as f64 * 16.0,
+                ),
+                &chunk_canvas,
+            );
         }
 
         let (mut screen_x, mut screen_y) = map_to_screen(
@@ -484,14 +553,30 @@ impl Map {
         screen_x = screen_x.floor();
         screen_y = screen_y.floor();
 
-        canvas.context.set_global_composite_operation("source-in").unwrap();
+        canvas
+            .context
+            .set_global_composite_operation("source-in")
+            .unwrap();
         canvas.draw_canvas((screen_x, screen_y), &self.canvas);
-        canvas.context.set_global_composite_operation("destination-over").unwrap();
+        canvas
+            .context
+            .set_global_composite_operation("destination-over")
+            .unwrap();
         use wasm_bindgen::JsValue;
         use wasm_game_lib::graphics::color::Color;
-        canvas.context.set_fill_style(&JsValue::from_str(&Color::black().to_string()));
-        canvas.context.fill_rect(0.0,0.0, screen_center.0 as f64 * 2.0, screen_center.1 as f64 * 2.0);
-        canvas.context.set_global_composite_operation("source-over").unwrap();
+        canvas
+            .context
+            .set_fill_style(&JsValue::from_str(&Color::black().to_string()));
+        canvas.context.fill_rect(
+            0.0,
+            0.0,
+            screen_center.0 as f64 * 2.0,
+            screen_center.1 as f64 * 2.0,
+        );
+        canvas
+            .context
+            .set_global_composite_operation("source-over")
+            .unwrap();
     }
 }
 
@@ -538,8 +623,18 @@ impl std::ops::IndexMut<(isize, isize)> for Map {
             }
         }
 
-        if self.air != (Block{block_type: BlockType::Air, natural_background: NaturalBackground::Sky, light: 0}) {
-            self.air = Block{block_type: BlockType::Air, natural_background: NaturalBackground::Sky, light: 0};
+        if self.air
+            != (Block {
+                block_type: BlockType::Air,
+                natural_background: NaturalBackground::Sky,
+                light: 0,
+            })
+        {
+            self.air = Block {
+                block_type: BlockType::Air,
+                natural_background: NaturalBackground::Sky,
+                light: 0,
+            };
         }
 
         &mut self.air
@@ -552,15 +647,19 @@ impl std::ops::IndexMut<(isize, isize)> for Map {
 fn test() {
     use std::mem::MaybeUninit;
 
-    let textures = unsafe {MaybeUninit::uninit().assume_init()};
-    let canvas = unsafe {MaybeUninit::uninit().assume_init()};
+    let textures = unsafe { MaybeUninit::uninit().assume_init() };
+    let canvas = unsafe { MaybeUninit::uninit().assume_init() };
 
     let mut map = Map {
         chunks: Vec::new(),
         textures,
         first_chunk_number: -5,
-        first_block: 0, 
-        air: Block{block_type: BlockType::Air, natural_background: NaturalBackground::Sky, light: 0},
+        first_block: 0,
+        air: Block {
+            block_type: BlockType::Air,
+            natural_background: NaturalBackground::Sky,
+            light: 0,
+        },
         to_update_chunks: Vec::new(),
         light_update: Vec::new(),
         canvas,
@@ -569,14 +668,14 @@ fn test() {
     let mut height: f64 = 20.0;
     let mut slope: f64 = 0.2;
     for i in -5..5 {
-        let chunk_canvas = unsafe {MaybeUninit::uninit().assume_init()};
+        let chunk_canvas = unsafe { MaybeUninit::uninit().assume_init() };
 
-        let light_chunk_canvas = unsafe {MaybeUninit::uninit().assume_init()};
+        let light_chunk_canvas = unsafe { MaybeUninit::uninit().assume_init() };
 
         map.chunks.push((
             Chunk::generate(&mut height, &mut slope, true, i * 32),
             chunk_canvas,
-            light_chunk_canvas
+            light_chunk_canvas,
         ));
     }
 
