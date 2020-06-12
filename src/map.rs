@@ -86,7 +86,7 @@ impl Chunk {
                 *slope -= biome.get_frequency() / 3.0;
             }
 
-            let mut hasher2 = XxHash32::with_seed(42); // to avoid generating a tree if there is a tree at the left
+            let hasher2 = XxHash32::with_seed(42); // to avoid generating a tree if there is a tree at the left
             hasher.write_isize(x-1);
             let tree = hash % biome.get_tree_prob() as u64 == 0 && hasher2.finish() % biome.get_tree_prob() as u64 != 0;
 
@@ -99,8 +99,8 @@ impl Chunk {
             }
             
             let mut column = arr!(Block{block_type: BlockType::Dirt, natural_background: NaturalBackground::Dirt, light: 0}; 2048);
-            for y in 0..height.floor() as usize {
-                column[y] = Block{block_type: BlockType::Air, natural_background: NaturalBackground::Sky, light: 0};
+            for block in column.iter_mut().take(height.floor() as usize) {
+                *block = Block{block_type: BlockType::Air, natural_background: NaturalBackground::Sky, light: 0};
             }
             column[height.floor() as usize] = Block{block_type: BlockType::Grass, natural_background: NaturalBackground::Dirt, light: 0};
             if tree && height.floor() as usize > 0 {
