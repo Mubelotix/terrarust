@@ -345,19 +345,15 @@ impl Map {
     }
 
     pub fn spread_lights(&mut self) {
-        log!("Updating lights");
-
         let mut n = 0;
         while !self.light_update.is_empty() {
             self.update_light();
             n += 1;
 
-            if n % 1000 == 0 {
-                log!("1000 lights spread. Program hanging");
+            if n > 100000 {
+                panic!("100000 lights spread. Program hanging");
             }
         }
-
-        log!("Lights updated");
     }
 
     fn update_light(&mut self) {
@@ -368,7 +364,7 @@ impl Map {
         }
 
         let (x, y, cancellation) = self.light_update.remove(0);
-        if x < -20 || x > 20 || y < 0 || y > 100 {
+        if x <= self.first_chunk_number * 32 || x >= (self.first_chunk_number + self.chunks.len() as isize) * 32 || y < 0 || y > 100 {
             return;
         }
 
