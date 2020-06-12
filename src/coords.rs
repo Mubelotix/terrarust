@@ -1,4 +1,4 @@
-use crate::{map::Biome, player::Player};
+use crate::{chunks::Biome, player::Player};
 use std::hash::Hasher;
 use twox_hash::XxHash32;
 use wasm_game_lib::elog;

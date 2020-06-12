@@ -19,6 +19,7 @@ mod map;
 mod player;
 mod progress_bar;
 mod textures;
+mod chunks;
 use blocks::BlockType;
 use map::Map;
 use player::Player;
