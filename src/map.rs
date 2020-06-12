@@ -137,7 +137,7 @@ pub struct Map {
     textures: Rc<Textures>,
     air: Block,
     to_update_chunks: Vec<usize>,
-    pub light_update: Vec<(isize, isize)>,
+    pub light_update: Vec<(isize, isize, bool)>,
 }
 
 impl Map {
@@ -334,7 +334,7 @@ impl Map {
                 }
                 
                 if y == 1 {
-                    self.light_update.push((x, y));
+                    self.light_update.push((x, y, false));
                 }
             }
         }
@@ -367,10 +367,45 @@ impl Map {
             return;
         }
 
-        let (x, y) = self.light_update.remove(0);
+        let (x, y, cancellation) = self.light_update.remove(0);
         if x < -20 || x > 20 || y < 0 || y > 100 {
             return;
         }
+
+        if cancellation {
+            let updates;
+
+            {
+                let light = &self[(x, y)].light;
+                let left_block = &self[(x - 1, y)];
+                let right_block = &self[(x + 1, y)];
+                let top_block = &self[(x, y - 1)];
+                let bottom_block = &self[(x, y + 1)];
+                updates = ( 
+                    right_block.light + right_block.block_type.get_light_loss() == *light,
+                    left_block.light + left_block.block_type.get_light_loss() == *light,
+                    top_block.light + top_block.block_type.get_light_loss() == *light,
+                    bottom_block.light + bottom_block.block_type.get_light_loss() == *light
+                );
+            }
+
+            self[(x, y)].light = 0;
+
+            if updates.0 && !self.light_update.contains(&(x + 1, y, true))  {
+                self.light_update.push((x + 1, y, true))
+            }
+            if updates.1 && !self.light_update.contains(&(x - 1, y, true)) {
+                self.light_update.push((x - 1, y, true))
+            }
+            if updates.2 && !self.light_update.contains(&(x, y - 1, true)) {
+                self.light_update.push((x, y - 1, true))
+            }
+            if updates.3 && !self.light_update.contains(&(x, y + 1, true)) {
+                self.light_update.push((x, y + 1, true))
+            }
+            return;
+        }
+
         let light;
         let updates;
         {
@@ -387,17 +422,17 @@ impl Map {
                 bottom_block.light + bottom_block.block_type.get_light_loss() < light
             );
         }
-        if updates.0 && !self.light_update.contains(&(x + 1, y))  {
-            self.light_update.push((x + 1, y))
+        if updates.0 && !self.light_update.contains(&(x + 1, y, false))  {
+            self.light_update.push((x + 1, y, false))
         }
-        if updates.1 && !self.light_update.contains(&(x - 1, y)) {
-            self.light_update.push((x - 1, y))
+        if updates.1 && !self.light_update.contains(&(x - 1, y, false)) {
+            self.light_update.push((x - 1, y, false))
         }
-        if updates.2 && !self.light_update.contains(&(x, y - 1)) && y != 1 && y != 2 && y != 3 {
-            self.light_update.push((x, y - 1))
+        if updates.2 && !self.light_update.contains(&(x, y - 1, false)) {
+            self.light_update.push((x, y - 1, false))
         }
-        if updates.3 && !self.light_update.contains(&(x, y + 1)) {
-            self.light_update.push((x, y + 1))
+        if updates.3 && !self.light_update.contains(&(x, y + 1, false)) {
+            self.light_update.push((x, y + 1, false))
         }
 
         self[(x, y)].light = light;
