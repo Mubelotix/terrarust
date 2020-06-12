@@ -137,7 +137,7 @@ pub struct Map {
     textures: Rc<Textures>,
     air: Block,
     to_update_chunks: Vec<usize>,
-    light_update: Vec<(isize, isize, LightChangeMode)>,
+    light_update: Vec<(isize, isize)>,
 }
 
 impl Map {
@@ -387,7 +387,7 @@ impl Map {
                 }
                 
                 if y == 1 {
-                    self.light_update.push((x, y, LightChangeMode::Dumb));
+                    self.light_update.push((x, y));
                 }
             }
         }
@@ -406,49 +406,35 @@ impl Map {
             return;
         }
 
-        let (x, y, mode) = self.light_update.remove(0);
+        let (x, y) = self.light_update.remove(0);
         if x < -20 || x > 20 || y < 0 || y > 100 {
             return;
         }
 
-        match mode {
-            LightChangeMode::Dumb => {
-                let light;
-                let updates;
-                {
-                    let block = &self[(x, y)];
-                    let left_block = &self[(x - 1, y)];
-                    let right_block = &self[(x + 1, y)];
-                    let top_block = &self[(x, y - 1)];
-                    let bottom_block = &self[(x, y + 1)];
-                    light = max(max(left_block.light, right_block.light), max(top_block.light, bottom_block.light)).saturating_sub(block.block_type.get_light_loss());
-                    updates = (right_block.light + right_block.block_type.get_light_loss() < light, left_block.light + left_block.block_type.get_light_loss() < light, top_block.light + top_block.block_type.get_light_loss() < light, bottom_block.light + bottom_block.block_type.get_light_loss() < light);
-                }
-                if updates.0 && !self.light_update.contains(&(x + 1, y)) {
-                    self.light_update.push((x + 1, y))
-                }
-                if updates.1 && !self.light_update.contains(&(x - 1, y)) {
-                    self.light_update.push((x - 1, y))
-                }
-                if updates.2 && !self.light_update.contains(&(x, y - 1)) {
-                    self.light_update.push((x, y - 1))
-                }
-                if updates.3 && !self.light_update.contains(&(x, y + 1)) {
-                    self.light_update.push((x, y + 1))
-                }
-
-                self[(x, y)].light = light;
-            },
-            LightChangeMode::BlockRemoval => {
-
-            }
+        let light;
+        let updates;
+        {
+            let block = &self[(x, y)];
+            let left_block = &self[(x - 1, y)];
+            let right_block = &self[(x + 1, y)];
+            let top_block = &self[(x, y - 1)];
+            let bottom_block = &self[(x, y + 1)];
+            light = max(max(left_block.light, right_block.light), max(top_block.light, bottom_block.light)).saturating_sub(block.block_type.get_light_loss());
+            updates = (right_block.light + right_block.block_type.get_light_loss() < light, left_block.light + left_block.block_type.get_light_loss() < light, top_block.light + top_block.block_type.get_light_loss() < light, bottom_block.light + bottom_block.block_type.get_light_loss() < light);
+        }
+        if updates.0 && !self.light_update.contains(&(x + 1, y)) {
+            self.light_update.push((x + 1, y))
+        }
+        if updates.1 && !self.light_update.contains(&(x - 1, y)) {
+            self.light_update.push((x - 1, y))
+        }
+        if updates.2 && !self.light_update.contains(&(x, y - 1)) {
+            self.light_update.push((x, y - 1))
+        }
+        if updates.3 && !self.light_update.contains(&(x, y + 1)) {
+            self.light_update.push((x, y + 1))
         }
     }
-}
-
-pub enum LightChangeMode {
-    Dumb,
-    BlockRemoval
 }
 
 impl Map {
