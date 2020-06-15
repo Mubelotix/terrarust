@@ -461,17 +461,18 @@ impl Map {
             canvas.get_height() as f64,
         );
 
-        for (chunk_idx, light_canvas) in self.chunks.iter().map(|(_a, _b, c)| c).enumerate() {
-            let (mut screen_x, mut screen_y) = map_to_screen(
-                (self.first_chunk_number + chunk_idx as isize) * 32,
-                self.first_block as isize,
-                &player,
-                screen_center,
-            );
-            screen_x = screen_x.floor();
-            screen_y = screen_y.floor();
+        let (mut screen_x, mut screen_y) = map_to_screen(
+            self.first_chunk_number * 32,
+            self.first_block as isize,
+            &player,
+            screen_center,
+        );
 
-            canvas.draw_canvas((screen_x - 5.0 * 16.0, screen_y), &light_canvas);
+        screen_x = screen_x.floor();
+        screen_y = screen_y.floor();
+
+        for (chunk_idx, light_canvas) in self.chunks.iter().map(|(_a, _b, c)| c).enumerate() {
+            canvas.draw_canvas((screen_x + chunk_idx as f64 * 32.0 * 16.0 - 5.0 * 16.0, screen_y), &light_canvas);
         }
 
         self.canvas.clear();
