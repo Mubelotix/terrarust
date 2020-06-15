@@ -315,7 +315,7 @@ impl Map {
             let mut need_spreading = false;
             for y in 0..2 {
                 if y == 0 && self[(x, y)].light == 0 {
-                    self[(x, y)].light = 100;
+                    self.index_mut_and_render((x, y)).light = 100;
                     need_spreading = true;
                 }
 
