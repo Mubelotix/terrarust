@@ -48,8 +48,9 @@ pub async fn start() {
 
     let textures = Rc::new(Textures::load(&mut canvas).await);
 
-    let mut map = Map::new(Rc::clone(&textures));
     let mut player = Player::new(Rc::clone(&textures));
+    let mut map = Map::new(Rc::clone(&textures));
+    
     let mut frame = 0;
 
     let mut direction_keys = (false, false, false, false);
