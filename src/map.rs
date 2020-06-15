@@ -218,7 +218,6 @@ impl Map {
         let chunk_number = x_to_chunk(player.x.floor() as isize);
 
         let mut diff = self.first_chunk_number - chunk_number;
-        let mut need_init_lights = false;
 
         while diff > -4 {
             let mut chunk_canvas = Canvas::new();
@@ -249,9 +248,16 @@ impl Map {
                 .1
                 .context
                 .set_fill_style(&wasm_bindgen::JsValue::from_str("rgb(135,206,235)"));
-            // TODOto_update.push(1);
+            let old_lights: Vec<(isize, isize, bool)> = self.light_update.drain(..).collect();
+            self.init_lights();
+            for x in (1 + self.first_chunk_number) * 32..(2 + self.first_chunk_number) * 32 {
+                for y in 0..100 {
+                    self.render_block(x, y);
+                    self.render_light(x, y);
+                }
+            }
+            self.light_update = old_lights;
 
-            need_init_lights = true;
             diff = self.first_chunk_number - chunk_number;
         }
         while diff < -4 {
@@ -281,25 +287,21 @@ impl Map {
                 .1
                 .context
                 .set_fill_style(&wasm_bindgen::JsValue::from_str("rgb(135,206,235)"));
-            /*self.init_lights();
-            for x in (idx as isize - self.first_chunk_number) * 32..(idx as isize - self.first_chunk_number) * 32 + 32 {
+            let old_lights: Vec<(isize, isize, bool)> = self.light_update.drain(..).collect();
+            self.init_lights();
+            for x in (idx as isize + self.first_chunk_number) * 32 - 32..(idx as isize + self.first_chunk_number) * 32 {
                 for y in 0..100 {
                     self.render_block(x, y);
                     self.render_light(x, y);
                 }
             }
-            self.light_update.clear();*/
+            self.light_update = old_lights;
 
-            need_init_lights = true;
             diff = self.first_chunk_number - chunk_number;
         }
 
-        if need_init_lights {
-            self.init_lights();
-        }
-
         let total_changes = self.blocks_to_render.len() + self.light_to_render.len();
-        if total_changes > 100 {
+        if total_changes > 1200 {
             wasm_game_lib::log!("WARNING: {} elements to render", total_changes);
         }
 
