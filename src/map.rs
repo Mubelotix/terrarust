@@ -512,7 +512,7 @@ impl Map {
             0.0,
             0.0,
             screen_center.0 as f64 * 2.0,
-            screen_center.1 as f64 * 2.0,
+            screen_center.1 as f64 * 2.0 + 1.0,
         );
         canvas
             .context
