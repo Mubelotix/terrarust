@@ -276,11 +276,19 @@ impl Map {
                 chunk_canvas,
                 light_chunk_canvas
             ));
-            self.chunks.last().unwrap()
+            let idx = self.chunks.len() - 1;
+            self.chunks[idx]
                 .1
                 .context
                 .set_fill_style(&wasm_bindgen::JsValue::from_str("rgb(135,206,235)"));
-            // TODO to_update.push(self.chunks.len() - 1);
+            /*self.init_lights();
+            for x in (idx as isize - self.first_chunk_number) * 32..(idx as isize - self.first_chunk_number) * 32 + 32 {
+                for y in 0..100 {
+                    self.render_block(x, y);
+                    self.render_light(x, y);
+                }
+            }
+            self.light_update.clear();*/
 
             need_init_lights = true;
             diff = self.first_chunk_number - chunk_number;
@@ -288,6 +296,11 @@ impl Map {
 
         if need_init_lights {
             self.init_lights();
+        }
+
+        let total_changes = self.blocks_to_render.len() + self.light_to_render.len();
+        if total_changes > 100 {
+            wasm_game_lib::log!("WARNING: {} elements to render", total_changes);
         }
 
         self.render_changes(player);
@@ -504,6 +517,15 @@ impl Map {
             .set_global_composite_operation("source-over")
             .unwrap();
     }
+
+    pub fn index_mut_and_render(&mut self, (x, y): (isize, isize)) -> &mut Block {
+        self.blocks_to_render.push((x, y));
+        self.blocks_to_render.push((x, y - 1)); // TODO fix -1
+        self.blocks_to_render.push((x, y + 1));
+        self.blocks_to_render.push((x - 1, y));
+        self.blocks_to_render.push((x + 1, y));
+        &mut self[(x, y)]
+    }
 }
 
 impl std::ops::Index<(isize, isize)> for Map {
@@ -537,11 +559,6 @@ impl std::ops::IndexMut<(isize, isize)> for Map {
         if y >= 0 && chunk_index >= 0 {
             if let Some(chunk) = self.chunks.get_mut(chunk_index as usize) {
                 if let Some(block) = chunk.0.blocks[column as usize].get_mut(y as usize) {
-                    self.blocks_to_render.push((x, y));
-                    self.blocks_to_render.push((x, y - 1)); // TODO fix -1
-                    self.blocks_to_render.push((x, y + 1));
-                    self.blocks_to_render.push((x - 1, y));
-                    self.blocks_to_render.push((x + 1, y));
                     return block;
                 }
             }

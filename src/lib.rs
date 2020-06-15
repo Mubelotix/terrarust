@@ -107,7 +107,7 @@ pub async fn start() {
                     player.inventory.push(item);
                 }
             }
-            map[(x, y)].block_type = BlockType::Air;
+            map.index_mut_and_render((x, y)).block_type = BlockType::Air;
             map.light_update.push((x, y, false));
             map.spread_lights();
         }
@@ -128,7 +128,7 @@ pub async fn start() {
                             if *quantity == 0 {
                                 player.inventory[player.selected_slot as usize] = None;
                             }
-                            map[(x, y)].block_type = block;
+                            map.index_mut_and_render((x, y)).block_type = block;
                             map.light_update.push((x, y, true));
                             map.spread_lights();
                             map.light_update.push((x, y, false));
