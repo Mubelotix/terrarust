@@ -10,7 +10,7 @@ use wasm_game_lib::{graphics::canvas::Canvas};
 
 pub struct Map {
     #[cfg(target_arch = "wasm32")]
-    chunks: Vec<(Chunk, Canvas, Canvas, Vec<(usize, usize)>)>,
+    chunks: Vec<(Chunk, Canvas, Canvas, Vec<(usize, usize)>, Vec<(usize, usize)>)>,
     #[cfg(not(target_arch = "wasm32"))]
     pub chunks: Vec<(Chunk, (), ())>,
     #[cfg(target_arch = "wasm32")]
@@ -59,6 +59,7 @@ impl Map {
                 chunk_canvas,
                 light_chunk_canvas,
                 Vec::new(),
+                Vec::new(),
             ));
         }
 
@@ -76,8 +77,8 @@ impl Map {
         if chunk_index >= 10 {
             return;
         }
-        self.chunks[chunk_index].1.clear();
         use wasm_bindgen::JsValue;
+        /*self.chunks[chunk_index].1.clear();
         self.chunks[chunk_index]
             .1
             .context
@@ -85,10 +86,10 @@ impl Map {
         self.chunks[chunk_index]
             .1
             .context
-            .fill_rect(5.0 * 16.0, 0.0, 42.0 * 16.0, 100.0 * 16.0);
+            .fill_rect(5.0 * 16.0, 0.0, 42.0 * 16.0, 100.0 * 16.0);*/
 
-        for _idx in 0..std::cmp::min(self.chunks[chunk_index].3.len(), 25) {
-            let (x, y) = self.chunks[chunk_index].3.remove(0);
+        for _idx in 0..std::cmp::min(self.chunks[chunk_index].4.len(), 50) {
+            let (x, y) = self.chunks[chunk_index].4.remove(0);
             self.chunks[chunk_index]
                 .2
                 .context
@@ -110,47 +111,57 @@ impl Map {
             );
         }
 
-        for x_idx in 0..32 {
-            for y_idx in 0..100 {
-                let x = x_idx as isize + (chunk_index as isize + self.first_chunk_number) * 32;
-                let y = y_idx + self.first_block as isize;
-                let block = &self[(x, y)];
+        self.chunks[chunk_index]
+            .1
+            .context
+            .set_fill_style(&JsValue::from_str("rgb(135,206,235)"));
+        for _idx in 0..std::cmp::min(self.chunks[chunk_index].3.len(), 200) {
+            let (x_idx, y_idx) = self.chunks[chunk_index].3.remove(0);
+            let x = x_idx as isize + (chunk_index as isize + self.first_chunk_number) * 32;
+            let y = y_idx as isize + self.first_block as isize;
+            let block = &self[(x, y)];
 
-                let block_texture_idx = get_texture_idx((
-                    self[(x, y - 1)].can_pass_through(),
-                    self[(x + 1, y)].can_pass_through(),
-                    self[(x, y + 1)].can_pass_through(),
-                    self[(x - 1, y)].can_pass_through(),
+            let block_texture_idx = get_texture_idx((
+                self[(x, y - 1)].can_pass_through(),
+                self[(x + 1, y)].can_pass_through(),
+                self[(x, y + 1)].can_pass_through(),
+                self[(x - 1, y)].can_pass_through(),
+            ));
+
+            self.chunks[chunk_index].1.context.fill_rect(
+                (x_idx + 5) as f64 * 16.0,
+                y_idx as f64 * 16.0,
+                16.0,
+                16.0,
+            );
+
+            if block.natural_background == NaturalBackground::Dirt
+                && (block.block_type == BlockType::Air || block_texture_idx != 0)
+            {
+                let texture_idx = get_texture_idx((
+                    self[(x, y - 1)].natural_background == NaturalBackground::Sky,
+                    self[(x + 1, y)].natural_background == NaturalBackground::Sky,
+                    self[(x, y + 1)].natural_background == NaturalBackground::Sky,
+                    self[(x - 1, y)].natural_background == NaturalBackground::Sky,
                 ));
+                self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.background_dirt.get_html_element(), texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
+            }
 
-                if block.natural_background == NaturalBackground::Dirt
-                    && (block.block_type == BlockType::Air || block_texture_idx != 0)
-                {
-                    let texture_idx = get_texture_idx((
-                        self[(x, y - 1)].natural_background == NaturalBackground::Sky,
-                        self[(x + 1, y)].natural_background == NaturalBackground::Sky,
-                        self[(x, y + 1)].natural_background == NaturalBackground::Sky,
-                        self[(x - 1, y)].natural_background == NaturalBackground::Sky,
-                    ));
-                    self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.background_dirt.get_html_element(), texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
+            match block.block_type {
+                BlockType::Air => (),
+                BlockType::Grass => {
+                    self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.grass.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
                 }
-
-                match block.block_type {
-                    BlockType::Air => (),
-                    BlockType::Grass => {
-                        self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.grass.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
-                    }
-                    BlockType::Dirt => {
-                        self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.dirt.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
-                    }
-                    BlockType::Tree => self.chunks[chunk_index].1.draw_image(
-                        (
-                            (x_idx + 5) as f64 * 16.0 - 80.0,
-                            y_idx as f64 * 16.0 - 240.0,
-                        ),
-                        &self.textures.tree,
+                BlockType::Dirt => {
+                    self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.dirt.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
+                }
+                BlockType::Tree => self.chunks[chunk_index].1.draw_image(
+                    (
+                        (x_idx + 5) as f64 * 16.0 - 80.0,
+                        y_idx as f64 * 16.0 - 240.0,
                     ),
-                }
+                    &self.textures.tree,
+                ),
             }
         }
     }
@@ -196,6 +207,7 @@ impl Map {
                     chunk_canvas,
                     light_chunk_canvas,
                     Vec::new(),
+                    Vec::new(),
                 ),
             );
             to_update.push(1);
@@ -225,6 +237,7 @@ impl Map {
                 ),
                 chunk_canvas,
                 light_chunk_canvas,
+                Vec::new(),
                 Vec::new(),
             ));
             to_update.push(self.chunks.len() - 1);
@@ -379,8 +392,8 @@ impl Map {
             let (chunk_number, x) = x_to_chunk_and_column(x);
             let chunk_index = (chunk_number - self.first_chunk_number) as usize;
             let (x, y) = (x as usize, y as usize);
-            if !self.chunks[chunk_index].3.contains(&(x, y)) {
-                self.chunks[chunk_index].3.push((x, y));
+            if !self.chunks[chunk_index].4.contains(&(x, y)) {
+                self.chunks[chunk_index].4.push((x, y));
             }
         }
     }
@@ -415,7 +428,7 @@ impl Map {
             canvas.get_height() as f64,
         );
 
-        for (chunk_idx, light_canvas) in self.chunks.iter().map(|(_a, _b, c, _d)| c).enumerate() {
+        for (chunk_idx, light_canvas) in self.chunks.iter().map(|(_a, _b, c, _d, _e)| c).enumerate() {
             let (mut screen_x, mut screen_y) = map_to_screen(
                 (self.first_chunk_number + chunk_idx as isize) * 32,
                 self.first_block as isize,
@@ -429,7 +442,7 @@ impl Map {
         }
 
         self.canvas.clear();
-        for (chunk_idx, chunk_canvas) in self.chunks.iter().map(|(_a, b, _c, _d)| b).enumerate() {
+        for (chunk_idx, chunk_canvas) in self.chunks.iter().map(|(_a, b, _c, _d, _e)| b).enumerate() {
             self.canvas.draw_canvas(
                 (
                     (chunk_idx as f64 * 32.0 * 16.0) - 5.0 * 16.0,
@@ -506,12 +519,18 @@ impl std::ops::IndexMut<(isize, isize)> for Map {
         if y >= 0 && chunk_index >= 0 {
             if let Some(chunk) = self.chunks.get_mut(chunk_index as usize) {
                 if let Some(block) = chunk.0.blocks[column as usize].get_mut(y as usize) {
+                    chunk.3.push((column as usize, y as usize));
+                    chunk.3.push((column as usize, y as usize - 1));
+                    chunk.3.push((column as usize, y as usize + 1));
+
                     self.to_update_chunks.push(chunk_index as usize);
                     if column == 0 && chunk_index > 0 {
                         self.to_update_chunks.push((chunk_index - 1) as usize);
+                        //self.chunks[chunk_index as usize - 1].3.push((32, y as usize));
                     }
                     if column == 31 {
                         self.to_update_chunks.push((chunk_index + 1) as usize);
+                        //self.chunks[chunk_index as usize + 1].3.push((0, y as usize));
                     }
                     return block;
                 }
