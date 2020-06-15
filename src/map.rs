@@ -10,13 +10,14 @@ use wasm_game_lib::{graphics::canvas::Canvas};
 
 #[cfg(target_arch = "wasm32")]
 pub struct Map {
-    chunks: Vec<(Chunk, Canvas, Canvas, Vec<(usize, usize)>, Vec<(usize, usize)>)>,
+    chunks: Vec<(Chunk, Canvas, Canvas)>,
+    light_to_render: Vec<(isize, isize)>,
+    blocks_to_render: Vec<(isize, isize)>,
     canvas: Canvas,
     pub first_chunk_number: isize,
     pub first_block: usize,
     textures: Rc<Textures>,
     pub air: Block,
-    pub to_update_chunks: Vec<usize>,
     pub light_update: Vec<(isize, isize, bool)>,
 }
 
@@ -35,6 +36,8 @@ impl Map {
     pub fn new(textures: Rc<Textures>) -> Map {
         let mut map = Map {
             chunks: Vec::new(),
+            light_to_render: Vec::new(),
+            blocks_to_render: Vec::new(),
             textures,
             first_chunk_number: -5,
             first_block: 0,
@@ -43,7 +46,6 @@ impl Map {
                 natural_background: NaturalBackground::Sky,
                 light: 0,
             },
-            to_update_chunks: Vec::new(),
             canvas: Canvas::new(),
             light_update: Vec::new(),
         };
@@ -63,14 +65,21 @@ impl Map {
             map.chunks.push((
                 Chunk::generate(&mut height, &mut slope, true, i * 32),
                 chunk_canvas,
-                light_chunk_canvas,
-                Vec::new(),
-                Vec::new(),
+                light_chunk_canvas
             ));
         }
 
-        for i in 0..10 {
-            map.update_chunk(i);
+        for x in -160..160 {
+            for y in 0..100 {
+                map.blocks_to_render.push((x, y));
+            }
+        }
+
+        for chunk_index in 0..10 {
+            map.chunks[chunk_index]
+                .1
+                .context
+                .set_fill_style(&wasm_bindgen::JsValue::from_str("rgb(135,206,235)"));
         }
 
         map.init_lights();
@@ -79,23 +88,18 @@ impl Map {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub fn update_chunk(&mut self, chunk_index: usize) {
-        if chunk_index >= 10 {
-            return;
-        }
+    pub fn render_changes(&mut self) {
         use wasm_bindgen::JsValue;
-        /*self.chunks[chunk_index].1.clear();
-        self.chunks[chunk_index]
-            .1
-            .context
-            .set_fill_style(&JsValue::from_str("rgb(135,206,235)"));
-        self.chunks[chunk_index]
-            .1
-            .context
-            .fill_rect(5.0 * 16.0, 0.0, 42.0 * 16.0, 100.0 * 16.0);*/
 
-        for _idx in 0..std::cmp::min(self.chunks[chunk_index].4.len(), 50) {
-            let (x, y) = self.chunks[chunk_index].4.remove(0);
+        for _idx in 0..std::cmp::min(self.light_to_render.len(), 50) {
+            let (x, y) = self.light_to_render.remove(0);
+            let (chunk, x) = x_to_chunk_and_column(x);
+            let (x, y) = (x as usize, y as usize);
+            let chunk_index = (chunk - self.first_chunk_number) as usize;
+            if chunk_index >= self.chunks.len() {
+                continue;
+            }
+
             self.chunks[chunk_index]
                 .2
                 .context
@@ -116,15 +120,14 @@ impl Map {
                 16.0,
             );
         }
-
-        self.chunks[chunk_index]
-            .1
-            .context
-            .set_fill_style(&JsValue::from_str("rgb(135,206,235)"));
-        for _idx in 0..std::cmp::min(self.chunks[chunk_index].3.len(), 200) {
-            let (x_idx, y_idx) = self.chunks[chunk_index].3.remove(0);
-            let x = x_idx as isize + (chunk_index as isize + self.first_chunk_number) * 32;
-            let y = y_idx as isize + self.first_block as isize;
+        
+        for _idx in 0..std::cmp::min(self.blocks_to_render.len(), 50) {
+            let (x, y) = self.blocks_to_render.remove(0);
+            let (chunk, x_idx) = x_to_chunk_and_column(x);
+            let chunk_index = (chunk - self.first_chunk_number) as usize;
+            if chunk_index >= self.chunks.len() {
+                continue;
+            }
             let block = &self[(x, y)];
 
             let block_texture_idx = get_texture_idx((
@@ -136,7 +139,7 @@ impl Map {
 
             self.chunks[chunk_index].1.context.fill_rect(
                 (x_idx + 5) as f64 * 16.0,
-                y_idx as f64 * 16.0,
+                y as f64 * 16.0,
                 16.0,
                 16.0,
             );
@@ -150,21 +153,21 @@ impl Map {
                     self[(x, y + 1)].natural_background == NaturalBackground::Sky,
                     self[(x - 1, y)].natural_background == NaturalBackground::Sky,
                 ));
-                self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.background_dirt.get_html_element(), texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
+                self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.background_dirt.get_html_element(), texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y as f64 * 16.0, 16.0, 16.0).unwrap();
             }
 
             match block.block_type {
                 BlockType::Air => (),
                 BlockType::Grass => {
-                    self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.grass.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
+                    self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.grass.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y as f64 * 16.0, 16.0, 16.0).unwrap();
                 }
                 BlockType::Dirt => {
-                    self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.dirt.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y_idx as f64 * 16.0, 16.0, 16.0).unwrap();
+                    self.chunks[chunk_index].1.context.draw_image_with_html_image_element_and_sw_and_sh_and_dx_and_dy_and_dw_and_dh(&self.textures.dirt.get_html_element(), block_texture_idx as f64 * 16.0, 0.0, 16.0, 16.0, (x_idx + 5) as f64 * 16.0, y as f64 * 16.0, 16.0, 16.0).unwrap();
                 }
                 BlockType::Tree => self.chunks[chunk_index].1.draw_image(
                     (
                         (x_idx + 5) as f64 * 16.0 - 80.0,
-                        y_idx as f64 * 16.0 - 240.0,
+                        y as f64 * 16.0 - 240.0,
                     ),
                     &self.textures.tree,
                 ),
@@ -176,18 +179,8 @@ impl Map {
     pub fn update_chunks(&mut self, player: &Player) {
         let chunk_number = x_to_chunk(player.x.floor() as isize);
 
-        self.to_update_chunks.sort();
-        self.to_update_chunks.dedup();
-        for idx in 0..self.to_update_chunks.len() {
-            self.update_chunk(self.to_update_chunks[idx]);
-        }
-        self.to_update_chunks.clear();
-
         let mut diff = self.first_chunk_number - chunk_number;
         let mut need_init_lights = false;
-
-        let mut to_update_offset: isize = 0;
-        let mut to_update = Vec::new();
 
         while diff > -4 {
             let mut chunk_canvas = Canvas::new();
@@ -211,13 +204,14 @@ impl Map {
                         self.first_chunk_number * 32,
                     ),
                     chunk_canvas,
-                    light_chunk_canvas,
-                    Vec::new(),
-                    Vec::new(),
+                    light_chunk_canvas
                 ),
             );
-            to_update.push(1);
-            to_update_offset += 1;
+            self.chunks[0]
+                .1
+                .context
+                .set_fill_style(&wasm_bindgen::JsValue::from_str("rgb(135,206,235)"));
+            // TODOto_update.push(1);
 
             need_init_lights = true;
             diff = self.first_chunk_number - chunk_number;
@@ -242,37 +236,23 @@ impl Map {
                     self.first_chunk_number * 32,
                 ),
                 chunk_canvas,
-                light_chunk_canvas,
-                Vec::new(),
-                Vec::new(),
+                light_chunk_canvas
             ));
-            to_update.push(self.chunks.len() - 1);
-            to_update_offset -= 1;
+            self.chunks.last().unwrap()
+                .1
+                .context
+                .set_fill_style(&wasm_bindgen::JsValue::from_str("rgb(135,206,235)"));
+            // TODO to_update.push(self.chunks.len() - 1);
 
             need_init_lights = true;
             diff = self.first_chunk_number - chunk_number;
         }
 
-        for to_update in to_update.iter_mut() {
-            *to_update = (*to_update as isize + to_update_offset) as usize;
-        }
-
-        for (idx, chunk) in self.chunks.iter().enumerate() {
-            if !chunk.3.is_empty() {
-                to_update.push(idx);
-            }
-        }
-
-        to_update.sort();
-        to_update.dedup();
-
-        for to_update in to_update {
-            self.update_chunk(to_update);
-        }
-
         if need_init_lights {
             self.init_lights();
         }
+
+        self.render_changes();
     }
 
     pub fn init_lights(&mut self) {
@@ -394,13 +374,7 @@ impl Map {
 
         if self[(x, y)].light != light {
             self[(x, y)].light = light;
-
-            let (chunk_number, x) = x_to_chunk_and_column(x);
-            let chunk_index = (chunk_number - self.first_chunk_number) as usize;
-            let (x, y) = (x as usize, y as usize);
-            if !self.chunks[chunk_index].4.contains(&(x, y)) {
-                self.chunks[chunk_index].4.push((x, y));
-            }
+            self.light_to_render.push((x, y));
         }
     }
 
@@ -434,7 +408,7 @@ impl Map {
             canvas.get_height() as f64,
         );
 
-        for (chunk_idx, light_canvas) in self.chunks.iter().map(|(_a, _b, c, _d, _e)| c).enumerate() {
+        for (chunk_idx, light_canvas) in self.chunks.iter().map(|(_a, _b, c)| c).enumerate() {
             let (mut screen_x, mut screen_y) = map_to_screen(
                 (self.first_chunk_number + chunk_idx as isize) * 32,
                 self.first_block as isize,
@@ -448,7 +422,7 @@ impl Map {
         }
 
         self.canvas.clear();
-        for (chunk_idx, chunk_canvas) in self.chunks.iter().map(|(_a, b, _c, _d, _e)| b).enumerate() {
+        for (chunk_idx, chunk_canvas) in self.chunks.iter().map(|(_a, b, _c)| b).enumerate() {
             self.canvas.draw_canvas(
                 (
                     (chunk_idx as f64 * 32.0 * 16.0) - 5.0 * 16.0,
@@ -525,19 +499,11 @@ impl std::ops::IndexMut<(isize, isize)> for Map {
         if y >= 0 && chunk_index >= 0 {
             if let Some(chunk) = self.chunks.get_mut(chunk_index as usize) {
                 if let Some(block) = chunk.0.blocks[column as usize].get_mut(y as usize) {
-                    chunk.3.push((column as usize, y as usize));
-                    chunk.3.push((column as usize, y as usize - 1));
-                    chunk.3.push((column as usize, y as usize + 1));
-
-                    self.to_update_chunks.push(chunk_index as usize);
-                    if column == 0 && chunk_index > 0 {
-                        self.to_update_chunks.push((chunk_index - 1) as usize);
-                        //self.chunks[chunk_index as usize - 1].3.push((32, y as usize));
-                    }
-                    if column == 31 {
-                        self.to_update_chunks.push((chunk_index + 1) as usize);
-                        //self.chunks[chunk_index as usize + 1].3.push((0, y as usize));
-                    }
+                    self.blocks_to_render.push((x, y));
+                    self.blocks_to_render.push((x, y - 1)); // TODO fix -1
+                    self.blocks_to_render.push((x, y + 1));
+                    self.blocks_to_render.push((x - 1, y));
+                    self.blocks_to_render.push((x + 1, y));
                     return block;
                 }
             }
