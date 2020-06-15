@@ -8,17 +8,23 @@ use crate::{
 use std::rc::Rc;
 use wasm_game_lib::{graphics::canvas::Canvas};
 
+#[cfg(target_arch = "wasm32")]
 pub struct Map {
-    #[cfg(target_arch = "wasm32")]
     chunks: Vec<(Chunk, Canvas, Canvas, Vec<(usize, usize)>, Vec<(usize, usize)>)>,
-    #[cfg(not(target_arch = "wasm32"))]
-    pub chunks: Vec<(Chunk, (), ())>,
-    #[cfg(target_arch = "wasm32")]
     canvas: Canvas,
     pub first_chunk_number: isize,
     pub first_block: usize,
-    #[cfg(target_arch = "wasm32")]
     textures: Rc<Textures>,
+    pub air: Block,
+    pub to_update_chunks: Vec<usize>,
+    pub light_update: Vec<(isize, isize, bool)>,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+pub struct Map {
+    pub chunks: Vec<(Chunk, (), (), Vec<(usize, usize)>, Vec<(usize, usize)>)>,
+    pub first_chunk_number: isize,
+    pub first_block: usize,
     pub air: Block,
     pub to_update_chunks: Vec<usize>,
     pub light_update: Vec<(isize, isize, bool)>,

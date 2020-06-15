@@ -31,6 +31,8 @@ pub fn map_initialization(c: &mut Criterion) {
                 Chunk::generate(&mut height, &mut slope, true, i * 32),
                 (),
                 (),
+                Vec::new(),
+                Vec::new(),
             ));
         }
 
