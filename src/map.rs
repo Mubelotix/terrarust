@@ -88,7 +88,9 @@ impl Map {
     }
 
     #[cfg(target_arch = "wasm32")]
-    pub fn render_changes(&mut self) {
+    pub fn render_changes(&mut self, player: &Player) {
+        let player_x = player.x.floor() as isize;
+        let player_y = player.y.floor() as isize;
         use wasm_bindgen::JsValue;
 
         for _idx in 0..std::cmp::min(self.light_to_render.len(), 50) {
@@ -120,6 +122,31 @@ impl Map {
                 16.0,
             );
         }
+        
+        self.blocks_to_render.sort_by(|(ax, ay), (bx, by)| {
+            let mut diffxa = player_x - ax;
+            if diffxa < 0 {
+                diffxa = -diffxa;
+            }
+            let mut diffya = player_y - ay;
+            if diffya < 0 {
+                diffya = -diffya;
+            }
+            let diffa = diffya + diffxa;
+
+            let mut diffxb = player_x - bx;
+            if diffxb < 0 {
+                diffxb = -diffxb;
+            }
+            let mut diffyb = player_y - by;
+            if diffyb < 0 {
+                diffyb = -diffyb;
+            }
+            let diffb = diffyb + diffxb;
+            
+            diffa.cmp(&diffb)
+        });
+        self.blocks_to_render.dedup();
         
         for _idx in 0..std::cmp::min(self.blocks_to_render.len(), 50) {
             let (x, y) = self.blocks_to_render.remove(0);
@@ -252,7 +279,7 @@ impl Map {
             self.init_lights();
         }
 
-        self.render_changes();
+        self.render_changes(player);
     }
 
     pub fn init_lights(&mut self) {
