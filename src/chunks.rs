@@ -120,6 +120,23 @@ impl Chunk {
                     water: 0,
                 };
             }
+
+            x -= 1;
+            if x == 8 {
+                column[9].water = 5;
+                column[10].water = 16;
+            }
+            if x == 9 {
+                column[9].water = 10;
+                column[10].water = 16;
+            }
+            if x == 10 {
+                wasm_game_lib::log!("set x 10 y 9 to w 4");
+                column[9].water = 4;
+                column[10].water = 10;
+            }
+            x += 1;
+
             blocks.push(column)
         }
 

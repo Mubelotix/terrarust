@@ -6,7 +6,7 @@ use crate::{
     chunks::Chunk,
 };
 use std::rc::Rc;
-use wasm_game_lib::{graphics::canvas::Canvas};
+use wasm_game_lib::{graphics::{canvas::*, color::*}};
 
 #[cfg(target_arch = "wasm32")]
 pub struct Map {
@@ -302,7 +302,7 @@ impl Map {
         }
 
         let total_changes = self.blocks_to_render.len() + self.light_to_render.len();
-        if total_changes > 1200 {
+        if total_changes > 2000 {
             wasm_game_lib::log!("WARNING: {} elements to render", total_changes);
         }
 
@@ -468,7 +468,6 @@ impl Map {
             &player,
             screen_center,
         );
-
         screen_x = screen_x.floor();
         screen_y = screen_y.floor();
 
@@ -487,14 +486,35 @@ impl Map {
             );
         }
 
-        let (mut screen_x, mut screen_y) = map_to_screen(
-            (self.first_chunk_number) * 32,
-            self.first_block as isize,
-            &player,
-            screen_center,
-        );
-        screen_x = screen_x.floor();
-        screen_y = screen_y.floor();
+        let linestyle: LineStyle = LineStyle {
+            cap: LineCap::Square,
+            color: Color::blue(),
+            size: 3.0,
+            join: LineJoin::Bevel,
+        };
+        linestyle.apply_on_canvas(&mut self.canvas);
+        self.canvas.context.set_fill_style(&JsValue::from("blue"));
+        for y in 0..100 {
+            let mut begin_path = false;
+            for x in 0..100 {
+                if self[(x, y)].water > 0 || self[(x - 1, y)].water > 0 || self[(x + 1, y)].water > 0 {
+                    if !begin_path {
+                        self.canvas.context.begin_path();
+                        self.canvas.context.move_to((x as f64 * 16.0 + 8.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0 - self[(x, y)].water as f64);
+                        begin_path = true;
+                    } else {
+                        self.canvas.context.line_to((x as f64 * 16.0 + 8.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0 - self[(x, y)].water as f64);
+                    }
+
+                    if begin_path && self[(x, y)].water == 0 && self[(x + 1, y)].water == 0 {
+                        self.canvas.context.close_path();
+                        self.canvas.context.stroke();
+                        self.canvas.context.fill();
+                        begin_path = false;
+                    }
+                }
+            }
+        }
 
         canvas
             .context
@@ -506,7 +526,6 @@ impl Map {
             .set_global_composite_operation("destination-over")
             .unwrap();
         use wasm_bindgen::JsValue;
-        use wasm_game_lib::graphics::color::Color;
         canvas
             .context
             .set_fill_style(&JsValue::from_str(&Color::black().to_string()));
