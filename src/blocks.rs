@@ -5,6 +5,7 @@ pub struct Block {
     pub block_type: BlockType,
     pub natural_background: NaturalBackground,
     pub light: usize,
+    pub water: usize,
 }
 
 impl Block {
@@ -13,6 +14,7 @@ impl Block {
             block_type,
             natural_background,
             light: 0,
+            water: 0,
         }
     }
 

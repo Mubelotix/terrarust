@@ -45,6 +45,7 @@ impl Map {
                 block_type: BlockType::Air,
                 natural_background: NaturalBackground::Sky,
                 light: 0,
+                water: 0,
             },
             canvas: Canvas::new(),
             light_update: Vec::new(),
@@ -550,6 +551,7 @@ impl std::ops::Index<(isize, isize)> for Map {
             block_type: BlockType::Air,
             natural_background: NaturalBackground::Sky,
             light: 0,
+            water: 0,
         }
     }
 }
@@ -572,12 +574,14 @@ impl std::ops::IndexMut<(isize, isize)> for Map {
                 block_type: BlockType::Air,
                 natural_background: NaturalBackground::Sky,
                 light: 0,
+                water: 0,
             })
         {
             self.air = Block {
                 block_type: BlockType::Air,
                 natural_background: NaturalBackground::Sky,
                 light: 0,
+                water: 0,
             };
         }
 

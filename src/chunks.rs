@@ -97,24 +97,27 @@ impl Chunk {
                 x -= 1;
             }
 
-            let mut column = arr!(Block{block_type: BlockType::Dirt, natural_background: NaturalBackground::Dirt, light: 0}; 2048);
+            let mut column = arr!(Block{block_type: BlockType::Dirt, natural_background: NaturalBackground::Dirt, light: 0, water: 0}; 2048);
             for block in column.iter_mut().take(height.floor() as usize) {
                 *block = Block {
                     block_type: BlockType::Air,
                     natural_background: NaturalBackground::Sky,
                     light: 0,
+                    water: 0,
                 };
             }
             column[height.floor() as usize] = Block {
                 block_type: BlockType::Grass,
                 natural_background: NaturalBackground::Dirt,
                 light: 0,
+                water: 0,
             };
             if tree && height.floor() as usize > 0 {
                 column[height.floor() as usize - 1] = Block {
                     block_type: BlockType::Tree,
                     natural_background: NaturalBackground::Dirt,
                     light: 0,
+                    water: 0,
                 };
             }
             blocks.push(column)
