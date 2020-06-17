@@ -603,45 +603,52 @@ impl Map {
     pub fn flow_water(&mut self) {
         for (x, y) in self.water_update.clone() {
             if self[(x, y)].water > 0.1 {
+                let mut dont_continue = false;
                 if self[(x, y + 1)].block_type == BlockType::Air {
-                    let quantity = if self[(x, y)].water > 1.0 {
+                    let mut quantity = if self[(x, y)].water > 1.0 {
                         1.0
                     } else {
                         self[(x, y)].water
                     };
+                    if self[(x, y + 1)].water > 16.0 {
+                        let max = 16.0 - self[(x, y + 1)].water;
+                        if quantity > max {
+                            quantity = max;
+                            dont_continue = true;
+                        }
+                    }
                     self[(x, y + 1)].water += quantity;
                     self[(x, y)].water -= quantity;
-
-                    if self[(x, y)].water < 0.0 {
-                        elog!("bug");
-                    }
 
                     if !self.water_update.contains(&(x, y + 1)) {
                         self.water_update.push((x, y + 1));
                     }
-                } else {
-                    let left =  self[(x - 1, y)].block_type == BlockType::Air;
-                    let right = self[(x + 1, y)].block_type == BlockType::Air;
 
-                    let water = match (left, right) {
-                        (true, true) => (self[(x, y)].water + self[(x - 1, y)].water + self[(x + 1, y)].water) / 3.0,
-                        (true, false) => (self[(x, y)].water + self[(x - 1, y)].water)  / 2.0,
-                        (false, true) => (self[(x, y)].water + self[(x + 1, y)].water) / 2.0,
-                        (false, false) => continue,
-                    };
-
-                    self[(x, y)].water = water;
-                    if left {
-                        self[(x - 1, y)].water = water;
-                        if !self.water_update.contains(&(x - 1, y)) {
-                            self.water_update.push((x - 1, y));
-                        }
+                    if !dont_continue {
+                        continue;
                     }
-                    if right {
-                        self[(x + 1, y)].water = water;
-                        if !self.water_update.contains(&(x + 1, y)) {
-                            self.water_update.push((x + 1, y));
-                        }
+                }
+                let left =  self[(x - 1, y)].block_type == BlockType::Air;
+                let right = self[(x + 1, y)].block_type == BlockType::Air;
+
+                let water = match (left, right) {
+                    (true, true) => (self[(x, y)].water + self[(x - 1, y)].water + self[(x + 1, y)].water) / 3.0,
+                    (true, false) => (self[(x, y)].water + self[(x - 1, y)].water)  / 2.0,
+                    (false, true) => (self[(x, y)].water + self[(x + 1, y)].water) / 2.0,
+                    (false, false) => continue,
+                };
+
+                self[(x, y)].water = water;
+                if left {
+                    self[(x - 1, y)].water = water;
+                    if !self.water_update.contains(&(x - 1, y)) {
+                        self.water_update.push((x - 1, y));
+                    }
+                }
+                if right {
+                    self[(x + 1, y)].water = water;
+                    if !self.water_update.contains(&(x + 1, y)) {
+                        self.water_update.push((x + 1, y));
                     }
                 }
             } else {
