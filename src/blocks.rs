@@ -36,7 +36,7 @@ pub enum BlockType {
 }
 
 impl BlockType {
-    pub fn can_pass_through(self) -> bool {
+    pub fn can_pass_through(&self) -> bool {
         match self {
             BlockType::Grass => false,
             BlockType::Dirt => false,

@@ -6,6 +6,7 @@ use crate::{
     chunks::Chunk,
 };
 use std::rc::Rc;
+#[allow(unused_imports)]
 use wasm_game_lib::{graphics::{canvas::*, color::*}, log, elog};
 
 #[cfg(target_arch = "wasm32")]
@@ -499,16 +500,49 @@ impl Map {
         };
         linestyle.apply_on_canvas(&mut self.canvas);
         self.canvas.context.set_fill_style(&JsValue::from("blue"));
+
+        #[allow(clippy::collapsible_if)]
         for y in 0..100 {
             let mut begin_path = false;
             for x in player.x.floor() as isize - 60..player.x.floor() as isize + 60 {
                 if self[(x, y)].water > 0.0 || self[(x - 1, y)].water > 0.0 || self[(x + 1, y)].water > 0.0 {
+                    let mut level = self[(x, y)].water.floor();
+                    if level > 16.0 {
+                        level = 16.0;
+                    }
+
                     if !begin_path {
                         self.canvas.context.begin_path();
-                        self.canvas.context.move_to((x as f64 * 16.0 + 8.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0 - self[(x, y)].water.floor());
+                        if self[(x, y)].water == 0.0 {
+                            self.canvas.context.move_to((x as f64 * 16.0 + 16.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0);
+
+                            if !self[(x, y)].block_type.can_pass_through() {
+                                let mut right_level = self[(x + 1, y)].water.floor();
+                                if right_level > 16.0 {
+                                    right_level = 16.0;
+                                }
+
+                                self.canvas.context.line_to((x as f64 * 16.0 + 16.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0 - right_level);
+                            }
+                        } else {
+                            self.canvas.context.move_to((x as f64 * 16.0 + 8.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0 - level);
+                        }
                         begin_path = true;
                     } else {
-                        self.canvas.context.line_to((x as f64 * 16.0 + 8.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0 - self[(x, y)].water.floor());
+                        if self[(x, y)].water == 0.0 {
+                            if !self[(x, y)].block_type.can_pass_through() {
+                                let mut left_level = self[(x - 1, y)].water.floor();
+                                if left_level > 16.0 {
+                                    left_level = 16.0;
+                                }
+
+                                self.canvas.context.line_to((x as f64 * 16.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0 - left_level);
+                            }
+
+                            self.canvas.context.line_to((x as f64 * 16.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0);
+                        } else {
+                            self.canvas.context.line_to((x as f64 * 16.0 + 8.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0 - level);
+                        }
                     }
 
                     if begin_path && self[(x, y)].water == 0.0 && self[(x + 1, y)].water == 0.0 {
