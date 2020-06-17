@@ -141,6 +141,7 @@ pub async fn start() {
 
         player.handle_events(direction_keys, &map, frame);
         map.update_chunks(&player);
+        map.flow_water();
 
         canvas.clear_with_color(Color::cyan());
         map.draw_on_canvas(&mut canvas, &player, screen_center);

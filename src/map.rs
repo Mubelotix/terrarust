@@ -6,7 +6,7 @@ use crate::{
     chunks::Chunk,
 };
 use std::rc::Rc;
-use wasm_game_lib::{graphics::{canvas::*, color::*}};
+use wasm_game_lib::{graphics::{canvas::*, color::*}, log, elog};
 
 #[cfg(target_arch = "wasm32")]
 pub struct Map {
@@ -19,6 +19,7 @@ pub struct Map {
     textures: Rc<Textures>,
     pub air: Block,
     pub light_update: Vec<(isize, isize, bool)>,
+    pub water_update: Vec<(isize, isize)>,
 }
 
 #[cfg(not(target_arch = "wasm32"))]
@@ -45,10 +46,11 @@ impl Map {
                 block_type: BlockType::Air,
                 natural_background: NaturalBackground::Sky,
                 light: 0,
-                water: 0,
+                water: 0.0,
             },
             canvas: Canvas::new(),
             light_update: Vec::new(),
+            water_update: Vec::new(),
         };
         map.canvas.set_width(32 * 16 * 9);
         map.canvas.set_height(2048 * 16);
@@ -75,6 +77,7 @@ impl Map {
                 .1
                 .context
                 .set_fill_style(&wasm_bindgen::JsValue::from_str("rgb(135,206,235)"));
+            map.init_water(chunk_index);
         }
         
         map.init_lights();
@@ -302,7 +305,7 @@ impl Map {
         }
 
         let total_changes = self.blocks_to_render.len() + self.light_to_render.len();
-        if total_changes > 2000 {
+        if total_changes > 3000 {
             wasm_game_lib::log!("WARNING: {} elements to render", total_changes);
         }
 
@@ -497,16 +500,16 @@ impl Map {
         for y in 0..100 {
             let mut begin_path = false;
             for x in 0..100 {
-                if self[(x, y)].water > 0 || self[(x - 1, y)].water > 0 || self[(x + 1, y)].water > 0 {
+                if self[(x, y)].water > 0.0 || self[(x - 1, y)].water > 0.0 || self[(x + 1, y)].water > 0.0 {
                     if !begin_path {
                         self.canvas.context.begin_path();
-                        self.canvas.context.move_to((x as f64 * 16.0 + 8.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0 - self[(x, y)].water as f64);
+                        self.canvas.context.move_to((x as f64 * 16.0 + 8.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0 - self[(x, y)].water.floor());
                         begin_path = true;
                     } else {
-                        self.canvas.context.line_to((x as f64 * 16.0 + 8.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0 - self[(x, y)].water as f64);
+                        self.canvas.context.line_to((x as f64 * 16.0 + 8.0) - self.first_chunk_number as f64 * 32.0 * 16.0, y as f64 * 16.0 + 16.0 - self[(x, y)].water.floor());
                     }
 
-                    if begin_path && self[(x, y)].water == 0 && self[(x + 1, y)].water == 0 {
+                    if begin_path && self[(x, y)].water == 0.0 && self[(x + 1, y)].water == 0.0 {
                         self.canvas.context.close_path();
                         self.canvas.context.stroke();
                         self.canvas.context.fill();
@@ -549,6 +552,68 @@ impl Map {
         self.blocks_to_render.push((x + 1, y));
         &mut self[(x, y)]
     }
+
+    pub fn init_water(&mut self, chunk_index: usize) {
+        for x in 0..32 {
+            for y in 0..2048 {
+                if self.chunks[chunk_index].0.blocks[x][y].water > 0.0 {
+                    self.water_update.push((x as isize, y as isize));
+                }
+            }
+        }
+    }
+
+    #[allow(clippy::collapsible_if)]
+    pub fn flow_water(&mut self) {
+        for (x, y) in self.water_update.clone() {
+            if self[(x, y)].water > 0.0 {
+                if self[(x, y + 1)].block_type == BlockType::Air {
+                    let quantity = if self[(x, y)].water > 1.0 {
+                        1.0
+                    } else {
+                        self[(x, y)].water
+                    };
+                    self[(x, y + 1)].water += quantity;
+                    self[(x, y)].water -= quantity;
+
+                    if self[(x, y)].water < 0.0 {
+                        elog!("bug");
+                    }
+
+                    if !self.water_update.contains(&(x, y + 1)) {
+                        self.water_update.push((x, y + 1));
+                    }
+                } else {
+                    let left =  self[(x - 1, y)].block_type == BlockType::Air;
+                    let right = self[(x + 1, y)].block_type == BlockType::Air;
+
+                    let water = match (left, right) {
+                        (true, true) => (self[(x, y)].water + self[(x - 1, y)].water + self[(x + 1, y)].water) / 3.0,
+                        (true, false) => (self[(x, y)].water + self[(x - 1, y)].water)  / 2.0,
+                        (false, true) => (self[(x, y)].water + self[(x + 1, y)].water) / 2.0,
+                        (false, false) => continue,
+                    };
+
+                    self[(x, y)].water = water;
+                    if left {
+                        self[(x - 1, y)].water = water;
+                        if !self.water_update.contains(&(x - 1, y)) {
+                            self.water_update.push((x - 1, y));
+                        }
+                    }
+                    if right {
+                        self[(x + 1, y)].water = water;
+                        if !self.water_update.contains(&(x + 1, y)) {
+                            self.water_update.push((x + 1, y));
+                        }
+                    }
+                }
+            } else {
+                self[(x, y)].water = 0.0;
+                self.water_update.retain(|e| e != &(x,y));
+            }
+        }
+    }
 }
 
 impl std::ops::Index<(isize, isize)> for Map {
@@ -570,7 +635,7 @@ impl std::ops::Index<(isize, isize)> for Map {
             block_type: BlockType::Air,
             natural_background: NaturalBackground::Sky,
             light: 0,
-            water: 0,
+            water: 0.0,
         }
     }
 }
@@ -593,14 +658,14 @@ impl std::ops::IndexMut<(isize, isize)> for Map {
                 block_type: BlockType::Air,
                 natural_background: NaturalBackground::Sky,
                 light: 0,
-                water: 0,
+                water: 0.0,
             })
         {
             self.air = Block {
                 block_type: BlockType::Air,
                 natural_background: NaturalBackground::Sky,
                 light: 0,
-                water: 0,
+                water: 0.0,
             };
         }
 

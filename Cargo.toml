@@ -9,7 +9,7 @@ publish = ["false"]
 crate-type = ["cdylib", "rlib"]
 
 [profile.release]
-opt-level = 3
+opt-level = 3 # doesn't increase file size so much and performances are twice better
 
 [dependencies]
 wasm-bindgen = "0.2"

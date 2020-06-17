@@ -97,43 +97,42 @@ impl Chunk {
                 x -= 1;
             }
 
-            let mut column = arr!(Block{block_type: BlockType::Dirt, natural_background: NaturalBackground::Dirt, light: 0, water: 0}; 2048);
+            let mut column = arr!(Block{block_type: BlockType::Dirt, natural_background: NaturalBackground::Dirt, light: 0, water: 0.0}; 2048);
             for block in column.iter_mut().take(height.floor() as usize) {
                 *block = Block {
                     block_type: BlockType::Air,
                     natural_background: NaturalBackground::Sky,
                     light: 0,
-                    water: 0,
+                    water: 0.0,
                 };
             }
             column[height.floor() as usize] = Block {
                 block_type: BlockType::Grass,
                 natural_background: NaturalBackground::Dirt,
                 light: 0,
-                water: 0,
+                water: 0.0,
             };
             if tree && height.floor() as usize > 0 {
                 column[height.floor() as usize - 1] = Block {
                     block_type: BlockType::Tree,
                     natural_background: NaturalBackground::Dirt,
                     light: 0,
-                    water: 0,
+                    water: 0.0,
                 };
             }
 
             x -= 1;
             if x == 8 {
-                column[9].water = 5;
-                column[10].water = 16;
+                column[9].water = 5.0;
+                column[10].water = 16.0;
             }
             if x == 9 {
-                column[9].water = 10;
-                column[10].water = 16;
+                column[9].water = 10.0;
+                column[10].water = 16.0;
             }
             if x == 10 {
-                wasm_game_lib::log!("set x 10 y 9 to w 4");
-                column[9].water = 4;
-                column[10].water = 10;
+                column[9].water = 4.0;
+                column[10].water = 10.0;
             }
             x += 1;
 
