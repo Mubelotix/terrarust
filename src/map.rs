@@ -37,8 +37,8 @@ impl Map {
     pub fn new(textures: Rc<Textures>) -> Map {
         let mut map = Map {
             chunks: Vec::new(),
-            light_to_render: Vec::new(),
-            blocks_to_render: Vec::new(),
+            light_to_render: Vec::with_capacity(2048),
+            blocks_to_render: Vec::with_capacity(2048),
             textures,
             first_chunk_number: -5,
             first_block: 0,
@@ -49,8 +49,8 @@ impl Map {
                 water: 0.0,
             },
             canvas: Canvas::new(),
-            light_update: Vec::new(),
-            water_update: Vec::new(),
+            light_update: Vec::with_capacity(2048),
+            water_update: Vec::with_capacity(2048),
         };
         map.canvas.set_width(32 * 16 * 9);
         map.canvas.set_height(2048 * 16);
@@ -252,6 +252,7 @@ impl Map {
                 .1
                 .context
                 .set_fill_style(&wasm_bindgen::JsValue::from_str("rgb(135,206,235)"));
+            self.init_water(1);
             let old_lights: Vec<(isize, isize, bool)> = self.light_update.drain(..).collect();
             self.init_lights();
             for x in (1 + self.first_chunk_number) * 32..(2 + self.first_chunk_number) * 32 {
@@ -293,6 +294,7 @@ impl Map {
                 .set_fill_style(&wasm_bindgen::JsValue::from_str("rgb(135,206,235)"));
             let old_lights: Vec<(isize, isize, bool)> = self.light_update.drain(..).collect();
             self.init_lights();
+            self.init_water(idx - 1);
             for x in (idx as isize + self.first_chunk_number) * 32 - 32..(idx as isize + self.first_chunk_number) * 32 {
                 for y in 0..100 {
                     self.render_block(x, y);
@@ -499,7 +501,7 @@ impl Map {
         self.canvas.context.set_fill_style(&JsValue::from("blue"));
         for y in 0..100 {
             let mut begin_path = false;
-            for x in 0..100 {
+            for x in player.x.floor() as isize - 60..player.x.floor() as isize + 60 {
                 if self[(x, y)].water > 0.0 || self[(x - 1, y)].water > 0.0 || self[(x + 1, y)].water > 0.0 {
                     if !begin_path {
                         self.canvas.context.begin_path();
@@ -557,7 +559,7 @@ impl Map {
         for x in 0..32 {
             for y in 0..2048 {
                 if self.chunks[chunk_index].0.blocks[x][y].water > 0.0 {
-                    self.water_update.push((x as isize, y as isize));
+                    self.water_update.push((x as isize + (self.first_chunk_number + chunk_index as isize) * 32, y as isize));
                 }
             }
         }
@@ -566,7 +568,7 @@ impl Map {
     #[allow(clippy::collapsible_if)]
     pub fn flow_water(&mut self) {
         for (x, y) in self.water_update.clone() {
-            if self[(x, y)].water > 0.0 {
+            if self[(x, y)].water > 0.1 {
                 if self[(x, y + 1)].block_type == BlockType::Air {
                     let quantity = if self[(x, y)].water > 1.0 {
                         1.0

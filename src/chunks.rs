@@ -121,20 +121,7 @@ impl Chunk {
                 };
             }
 
-            x -= 1;
-            if x == 8 {
-                column[9].water = 5.0;
-                column[10].water = 16.0;
-            }
-            if x == 9 {
-                column[9].water = 10.0;
-                column[10].water = 16.0;
-            }
-            if x == 10 {
-                column[9].water = 4.0;
-                column[10].water = 10.0;
-            }
-            x += 1;
+            column[1].water = 16.0;
 
             blocks.push(column)
         }
