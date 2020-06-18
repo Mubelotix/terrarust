@@ -601,6 +601,17 @@ impl Map {
 
     #[allow(clippy::collapsible_if)]
     pub fn flow_water(&mut self) {
+        fn get_pressure(level:f64) -> f64 {
+            match level {
+                0.0..=16.0 => 16.0,
+                16.0..=17.0 => 17.0,
+                17.0..=18.0 => 18.0,
+                18.0..=19.0 => 19.0,
+                19.0..=20.0 => 20.0,
+                _ => 21.0,
+            }
+        }
+
         for (x, y) in self.water_update.clone() {
             if self[(x, y)].water > 0.1 {
                 let mut dont_continue = false;
@@ -610,8 +621,9 @@ impl Map {
                     } else {
                         self[(x, y)].water
                     };
-                    if self[(x, y + 1)].water > 16.0 {
-                        let max = 16.0 - self[(x, y + 1)].water;
+                    if self[(x, y + 1)].water >= 16.0 {
+                        let max = get_pressure(self[(x, y)].water);
+                        let max = (max + 1.0) - self[(x, y + 1)].water;
                         if quantity > max {
                             quantity = max;
                             dont_continue = true;
@@ -628,6 +640,18 @@ impl Map {
                         continue;
                     }
                 }
+
+                // TODO remove 5
+                /*if y > 5 && self[(x, y - 1)].block_type.can_pass_through() && self[(x, y)].water > 16.0 && self[(x, y - 1)].water + 1.0 < self[(x, y)].water {
+                    log!("so much pressure!");
+                    self[(x, y - 1)].water += 1.0;
+                    self[(x, y)].water -= 1.0;
+
+                    if !self.water_update.contains(&(x, y - 1)) {
+                        self.water_update.push((x, y - 1));
+                    }
+                }*/
+
                 let left =  self[(x - 1, y)].block_type == BlockType::Air;
                 let right = self[(x + 1, y)].block_type == BlockType::Air;
 
