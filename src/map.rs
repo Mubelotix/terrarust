@@ -13,7 +13,6 @@ use wasm_game_lib::{graphics::{canvas::*, color::*}, log, elog};
 pub struct Map {
     chunks: Vec<(Chunk, Canvas, Canvas)>,
     light_to_render: Vec<(isize, isize)>,
-    blocks_to_render: Vec<(isize, isize)>,
     canvas: Canvas,
     pub first_chunk_number: isize,
     pub first_block: usize,
@@ -39,7 +38,6 @@ impl Map {
         let mut map = Map {
             chunks: Vec::new(),
             light_to_render: Vec::with_capacity(2048),
-            blocks_to_render: Vec::with_capacity(2048),
             textures,
             first_chunk_number: -5,
             first_block: 0,
@@ -186,36 +184,6 @@ impl Map {
             let (x, y) = self.light_to_render.remove(0);
             self.render_light(x, y);
         }
-        
-        self.blocks_to_render.sort_by(|(ax, ay), (bx, by)| {
-            let mut diffxa = player_x - ax;
-            if diffxa < 0 {
-                diffxa = -diffxa;
-            }
-            let mut diffya = player_y - ay;
-            if diffya < 0 {
-                diffya = -diffya;
-            }
-            let diffa = diffya + diffxa;
-
-            let mut diffxb = player_x - bx;
-            if diffxb < 0 {
-                diffxb = -diffxb;
-            }
-            let mut diffyb = player_y - by;
-            if diffyb < 0 {
-                diffyb = -diffyb;
-            }
-            let diffb = diffyb + diffxb;
-            
-            diffa.cmp(&diffb)
-        });
-        self.blocks_to_render.dedup();
-
-        for _idx in 0..std::cmp::min(self.blocks_to_render.len(), 50) {
-            let (x, y) = self.blocks_to_render.remove(0);
-            self.render_block(x, y);
-        }
     }
 
     #[cfg(target_arch = "wasm32")]
@@ -307,7 +275,7 @@ impl Map {
             diff = self.first_chunk_number - chunk_number;
         }
 
-        let total_changes = self.blocks_to_render.len() + self.light_to_render.len();
+        let total_changes = self.light_to_render.len();
         if total_changes > 3000 {
             wasm_game_lib::log!("WARNING: {} elements to render", total_changes);
         }
@@ -581,11 +549,11 @@ impl Map {
     }
 
     pub fn index_mut_and_render(&mut self, (x, y): (isize, isize)) -> &mut Block {
-        self.blocks_to_render.push((x, y));
-        self.blocks_to_render.push((x, y - 1)); // TODO fix -1
-        self.blocks_to_render.push((x, y + 1));
-        self.blocks_to_render.push((x - 1, y));
-        self.blocks_to_render.push((x + 1, y));
+        self.render_block(x, y);
+        self.render_block(x, y - 1); // TODO fix -1
+        self.render_block(x, y + 1);
+        self.render_block(x - 1, y);
+        self.render_block(x + 1, y);
         &mut self[(x, y)]
     }
 
